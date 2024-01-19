@@ -743,7 +743,7 @@ function ManualSearch() {
     const query = e.target.value;
     await setSearchQuery(query);
     console.log(searchQuery, "searchQuery");
-    if (searchQuery.trim() == "") {
+    if (searchQuery.trim() === "") {
       console.log("adsx")
       setSearchError("Search query cannot be empty");
     } else {

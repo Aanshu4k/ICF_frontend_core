@@ -261,7 +261,7 @@ function AutoSearch(navigation) {
 
         let searchWords = filteredSapAddress.split(' ');
 
-        searchWords = searchWords.filter(x => x != "")
+        searchWords = searchWords.filter(x => x !== "")
         console.log(searchWords, "filteredSapAddressfilteredSapAddress");
 
         let longestWord = searchWords.reduce((prev, current) => (current.length > prev.length ? current : prev), '');
@@ -538,9 +538,7 @@ function AutoSearch(navigation) {
   const handleRowClick = (row) => {
     setSelectAllChecked(false);
     console.log(selectedRows, "fffffffffffff");
-
     setSelectedRows([row]); // Set the selected row to an array containing only the clicked row
-
     // Update selected row count
     setSelectedRowCount(1);
   };
@@ -592,7 +590,6 @@ function AutoSearch(navigation) {
     //   return
 
     // }
-
     function setSearchLogs(payload) {
       const requestPromise = fetch(`${url.API_url}/api/create_log`, {
         method: "POST",
@@ -614,17 +611,19 @@ function AutoSearch(navigation) {
       const startTime = new Date();
       let finalStr = await searchMatchingResultAlgoAgain(row.SAP_ADDRESS, []);
       const inputAddress = row.SAP_ADDRESS;
+
+      //this function will check whether the word includes some exclude_terms or not
       function containsWord(word) {
         if (word && word.includes('NO')) {
           return false;
         }
-        return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase()))
+        return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase())); //true or false
       }
       // function containsWord1(word) {
       //   console.log(exclude_terms1,"exclude_terms1exclude_terms1exclude_terms1exclude_terms1")
       //   return exclude_terms1.some(arrWord => word.includes(arrWord.toUpperCase()))
       // }
-      let new_arr = finalStr.filter(x => !containsWord(x))
+      let new_arr = finalStr.filter(x => !containsWord(x));
       finalStr = new_arr;
       const uniqueArray = [...new Set(finalStr)];
       finalStr = uniqueArray;
@@ -1256,7 +1255,6 @@ function AutoSearch(navigation) {
   const handleRowClickAll = (e) => {
     if (e.target.checked) {
       console.log("sss")
-
       // setSelectedRows([...selectedRows]);
       setSelectedRows([...currentRows])
       setSelectedRowCount(currentRows.length)
@@ -1267,10 +1265,7 @@ function AutoSearch(navigation) {
       setSelectAllChecked(false);
       setSelectedRowCount(0)
     }
-
     console.log(selectAllChecked, "kkkkkjj")
-
-
   }
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -1432,7 +1427,6 @@ function AutoSearch(navigation) {
         }
 
         if (!val) {
-
           clearInterval(interval);
           setProgressValue(100);
 
@@ -1451,8 +1445,7 @@ function AutoSearch(navigation) {
   };
 
   const handleFetchCases1 = async (element) => {
-    console.log(urlDivision)
-
+    console.log(urlDivision);
     return new Promise((res, rej) => {
       let finalTotalCases = []
       if (!element || !element[0]) {
@@ -1497,11 +1490,9 @@ function AutoSearch(navigation) {
     }
   };
 
-
   useEffect(() => {
     if (userId) {
       handleAutomaticSearch();
-
     }
   }, [userId]); // Ensure that this effect runs when userId changes
   useEffect(() => {
@@ -1509,8 +1500,6 @@ function AutoSearch(navigation) {
       navigate('/login')
     }
   }, []); // Ensure that this effect runs when userId changes
-
-
 
   return (
     <div>

@@ -970,6 +970,7 @@ function SealingManual() {
     // Combine the address parts into a single address
     let str_arr = ["1ST", "I", "2ND", "II", "3RD", "III"];
     let str_arr1 = ["BLOCK", "BLK", "PLOT", "PLT"];
+    //replace unwanted character from the address part with a alphanumeric string
     addressPart1 = addressPart1.replace(/[^\w\s]/g, '');
     addressPart2 = addressPart2.replace(/[^\w\s]/g, '');
     addressPart3 = addressPart3 ? addressPart3.trim("") : "";
@@ -997,7 +998,7 @@ function SealingManual() {
     }
     addressPart3 = addressPart3.replace(/[^\w\s-]/g, '');
     let drop = localStorage.getItem("dropDataList")
-    if (drop && drop == 1) {
+    if (drop && drop === 1) {
       setIsDrop(1)
     } else {
       setIsDrop(0)
@@ -1032,7 +1033,6 @@ function SealingManual() {
               finalres = existingResult1;
             }
           }
-
         };
         setSearchResults([]);
         setSearchResults1([]);
