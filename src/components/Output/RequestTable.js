@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./tabs.css";
 import ManualSearch from "../ManualSearch";
 import SealingManual from "../SealingManual";
-//Switching betweeen two tabs "Dues Record " and "MCD record"
+
 function RequestTable({ onSelectRow }) {
   const [activeTab, setActiveTab] = useState("tab1");
 
@@ -38,18 +38,18 @@ function RequestTable({ onSelectRow }) {
           <i className="fa fa-file-o"></i>
           <span>MCD Records</span>
         </label>
-        {activeTab === "tab1" && (
-          <div id="content1s" className={`tab-content ${activeTab === "tab1" ? "active" : ""}`}>
-            <ManualSearch />
-          </div>)}
+  {activeTab === "tab1" && (
+  <div id="content1s" className={`tab-content ${activeTab === "tab1" ? "active" : ""}`}>
+  <ManualSearch />
+</div>)}
 
-        {activeTab === "tab2" && (
-          <div id="content1s" className={`tab-content ${activeTab === "tab2" ? "active" : ""}`}>
-            <SealingManual />
-          </div>)}
+{activeTab === "tab2" && (
+  <div id="content1s" className={`tab-content ${activeTab === "tab2" ? "active" : ""}`}>
+  <SealingManual />
+</div>)}
+     
 
-
-
+      
       </div>
     </div>
   );

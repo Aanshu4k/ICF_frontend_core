@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import "./AutoSearch.css";
+import Select from "react-dropdown-select";
 import toast, { Toaster } from "react-hot-toast";
 import CircularProgressWithLabel from "./CircularProgressWithLabel";
 // import {useHistory} from 'react-router-dom';
 import ProgressBar from '../components/progressBar/progressBar';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import CryptoJS from 'crypto-js';
-// import { useHistory } from 'history';
 
 const url = require("./config.json");
 
 function AutoSearch(navigation) {
 
   const [casesData, setCasesData] = useState([]);
+  const [casesDataOther, setCasesDataOther] = useState([]);
+  const [icfData, setIcfData] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [divisions, setDivisions] = useState([]);
-  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDivision, setSelectedDivision] = useState([]);
   const [matchingAddresses, setMatchingAddresses] = useState({});
   const [caseCount, setCaseCount] = useState(0);
   const [resetDivision, setResetDivision] = useState(false);
@@ -34,7 +35,17 @@ function AutoSearch(navigation) {
   // const previousRoute = history.location.state && history.location.state.from.pathname;
   // alert(previousRoute)
   useEffect(() => {
-    sessionStorage.clear();
+    const preserveKey = "systemId";
+
+    // Get all keys from sessionStorage
+    const allKeys = Object.keys(sessionStorage);
+
+    // Iterate through keys and remove those not matching the specified key
+    allKeys.forEach(key => {
+      if (key !== preserveKey || key !== "_selectedRows" || key != "_currentPage") {
+        sessionStorage.removeItem(key);
+      }
+    });
     // Update the previous route when the route changes
     setPreviousRoute(navigate.location);
     console.log(previousRoute, "llllllllllll")
@@ -42,7 +53,6 @@ function AutoSearch(navigation) {
 
   useEffect(() => {
     // Function to extract the token from the URL
-    //Here Tokens are fetched from the URL for user authorization & authentication after a successful login
     const extractTokenFromURL = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const tokenParam = urlParams.get('token');
@@ -88,49 +98,164 @@ function AutoSearch(navigation) {
   }, [userId]);
 
 
+
+  const [aufnrSearch, setAufnrSearch] = useState('');
+  const [filteredRows, setFilteredRows] = useState([]);
+
+  // Function to handle changes in the AUFNR search input
+  const handleAufnrSearch = (value) => {
+    setAufnrSearch(value);
+  };
+
+  // Function to handle the search button click
+  const handleSearch = () => {
+    // Filter the rows based on the entered AUFNR
+    console.log(aufnrSearch, "aufnrSearch");
+    handlePageChange(1)
+    if (!aufnrSearch) {
+      setCasesData(casesDataOther);
+      return
+    }
+    const newFilteredRows = casesDataOther.filter(row => row.AUFNR.includes(aufnrSearch));
+    setCasesData(newFilteredRows);
+  };
   const fetchDivisions = () => {
-    fetch(`${url.API_url}/api/divisions_on_page_load1`)
+    let usertype = localStorage.getItem("user") || "undefined";
+
+    // Define the data payload for the POST request
+    const postData = {
+      usertype
+    };
+
+    fetch(`${url.api_url}/api/divisions_on_page_load2`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Include any additional headers if required
+      },
+      body: JSON.stringify(postData), // Convert data to JSON format
+    })
       .then((response) => response.json())
       .then((data) => {
-        setDivisions(data.data);
+        let arr = [];
+        if (data.data) {
+          data.data.forEach((x) => {
+            arr.push({
+              value: x.VAPLZ,
+              label: x.VAPLZ + '-' + x.DIVISION_NAME,
+            });
+          });
+        }
+
+        console.log(arr, "arrarrarrarr");
+        setDivisions(arr);
       })
       .catch((error) => {
         console.error("Error fetching divisions:", error);
       });
   };
+  // const fetchDivisions = () => {
+  //   let usertype= localStorage.getItem("user") || "undefined"
+  //   fetch(`https://127.0.0.1:5001/api/divisions_on_page_load1`)
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       let arr =[]
+  //       if(data.data){
+  //         data.data.forEach(x=>{
+  //           arr.push({value:x.VAPLZ,
+  //             label:x.VAPLZ +'-' +x.DIVISION_NAME})
+  //         })
+  //       }
+
+  //       console.log(arr,"arrarrarrarr")
+  //       setDivisions(arr);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching divisions:", error);
+  //     });
+  // };
   useEffect(() => {
     fetchDivisions();
   }, []);
 
+
+
+
+
+  const pageIdentifier = "autoSearchPage";
+
+  // Load selected rows from localStorage on component mount
+  // useEffect(() => {
+  //   const storedSelectedRows = JSON.parse(localStorage.getItem(`_selectedRows`)) || [];
+  //   const page = JSON.parse(localStorage.getItem(`_currentPage`)) || [];
+
+  //   console.log(storedSelectedRows,"storedSelectedRowsstoredSelectedRows")
+  //   setSelectedRows(storedSelectedRows);
+  //   setCurrentPage(page || 0)
+  //   setSelectedRowCount(storedSelectedRows.length);
+  //   // setsele
+  //   // setSelectAllChecked(false); // Clear select all checkbox
+  // }, []);
+
+  // // Save selected rows to localStorage whenever it changes
+  // useEffect(() => {
+  //   if(selectedRows.length) {
+  //     localStorage.setItem(`_selectedRows`, JSON.stringify(selectedRows));
+  //     localStorage.setItem(`_currentPage`, currentPage);
+  //   }
+
+  // Other state variables can be saved to localStorage as needed
+  // }, [selectedRows]);
+
+
+
   const handleFetchCases = () => {
-    if (!selectedDivision) {
+    console.log(selectedDivision)
+    if (!selectedDivision.length) {
       console.warn("Please select a division before fetching cases.");
       toast.error("Please select a division before fetching cases.");
       return;
     }
-    let usertype = localStorage.getItem("user")
+    let value = selectedDivision[0].value;
+    let usertype = localStorage.getItem("user") || "undefined"
     handleButtonClick(1);
 
-    const requestPromise = fetch(`${url.API_url}/api/fetch_cases`, {
+    const requestPromise = fetch(`${url.API_url_DEV}/api/fetch_cases`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ VAPLZ: selectedDivision, usertype }),
+      body: JSON.stringify({ VAPLZ: value, usertype }),
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("fetched cases : ", data)
+        console.log("HELLOOOOOO", data)
         const rowsWithId = data.data.map((row, index) => ({
           ...row,
           id: index + 1,
         }));
         handleButtonClick(0);
-        setCasesData(rowsWithId); 
+
+        for (let case_ of rowsWithId) {
+          let exist = icfData.filter(x => x.aufnr == case_.AUFNR);
+          console.log(exist, "existexistessssssssxistexist")
+          if (exist.length) {
+            if (exist[0].duesData.length) {
+              case_.dues_found = true
+            }
+            if (exist[0].tpye && exist[0].tpye == 2) {
+              case_.mcd_found = true
+            }
+          }
+        }
+
+        console.log(rowsWithId, "rowsWithIdrowsWithIdrowsWithIdrowsWithIdrowsWithId")
+        setCasesData(rowsWithId);
+        setCasesDataOther(rowsWithId);
         // Update the case count
         setCaseCount(rowsWithId.length);
         console.log("Fetched cases data:", rowsWithId);
-        let filter = divisions.filter(x => x.VAPLZ === selectedDivision);
+        let filter = divisions.filter(x => x.VAPLZ == value);
 
         localStorage.setItem("selectedDivision", JSON.stringify(filter))
         const requestPromise = fetch(`${url.API_url}/api/synonyms`, {
@@ -138,7 +263,7 @@ function AutoSearch(navigation) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ division: selectedDivision }),
+          body: JSON.stringify({ division: value }),
         })
           .then((response) => response.json())
           .then((data) => {
@@ -156,7 +281,7 @@ function AutoSearch(navigation) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ division: selectedDivision }),
+          body: JSON.stringify({ division: value }),
         })
           .then((response) => response.json())
           .then((data) => {
@@ -219,13 +344,9 @@ function AutoSearch(navigation) {
 
     })
   }
-
-  // Define the result threshold
-
-  // removes speecfic word from the search string in both top and bottom window
+  // removes specific word from the search string in both top and bottom window
   let removeonlystr = ["dairy", "hn0", "propno", "and"];
   // removes word from final string passes in top window 
-
 
   const addCommaAfterSpace = (inputString) => {
     // Split the input string into an array of words
@@ -261,7 +382,7 @@ function AutoSearch(navigation) {
 
         let searchWords = filteredSapAddress.split(' ');
 
-        searchWords = searchWords.filter(x => x !== "")
+        searchWords = searchWords.filter(x => x != "")
         console.log(searchWords, "filteredSapAddressfilteredSapAddress");
 
         let longestWord = searchWords.reduce((prev, current) => (current.length > prev.length ? current : prev), '');
@@ -272,7 +393,7 @@ function AutoSearch(navigation) {
           ''
         );
 
-        console.log(searchWords, longestWord, lastLongestWord, secondLongestWord, "aaaddddddddddddddd");
+        console.log(searchWords, longestWord, lastLongestWord, secondLongestWord, "word Arr");
 
         searchWords.splice(searchWords.indexOf(secondLongestWord), 1);
         let thirdLongestWord = searchWords.reduce((prev, current) =>
@@ -295,7 +416,7 @@ function AutoSearch(navigation) {
         );
 
         let final_array_of_words = [longestWord, lastLongestWord, secondLongestWord, thirdLongestWord, longestWord, fiveLongestWord];
-        console.log(final_array_of_words, fiveLongestWord, "jjjjjjjjj")
+        console.log(final_array_of_words, fiveLongestWord, "final words array")
         final_array_of_words = final_array_of_words.filter(word => {
           if (/\d/.test(word)) {
             return false;
@@ -406,9 +527,7 @@ function AutoSearch(navigation) {
         let mergedWords_bkp = mergedWords;
         mergedWords = [];
         const alphabetPattern = /[a-zA-Z]/;
-
         mergedWords_bkp.forEach(x => {
-
           if (x.includes("/") && !x.startsWith("KH")) {
             let split = x.split("/");
             if (split.length) {
@@ -421,13 +540,10 @@ function AutoSearch(navigation) {
                 mergedWords.push(x)
               }
             }
-
           }
           else {
             mergedWords.push(x)
           }
-
-
           // if (x.includes("/")) {
           //   let split = x.split("/");
           //   if (split.length) {
@@ -460,8 +576,6 @@ function AutoSearch(navigation) {
           } else {
             mergedWords.push(str);
           }
-
-
         })
 
         console.log(mergedWords, "mergedWords");
@@ -514,32 +628,12 @@ function AutoSearch(navigation) {
     console.log(result, "resultresult")
     return result;
   }
-
-  // const handleRowClick = (row) => {
-  //   setSelectAllChecked(false)
-  //   console.log(selectedRows, "fffffffffffff");
-  //   let isExist = selectedRows.filter(x => x.AUFNR == row.AUFNR);
-  //   if (isExist.length) {
-  //     setSelectedRows((prevSelectedRows) => {
-  //       if (true) {
-  //         return prevSelectedRows.filter((selectedRow) => selectedRow.AUFNR !== row.AUFNR);
-  //       }
-  //     });
-  //   } else {
-  //     setSelectedRows((prevSelectedRows) => {
-  //       if (true) {
-  //         return [...prevSelectedRows, row];
-  //       }
-  //     });
-  //   }
-  //   // Update selected row count
-  //   setSelectedRowCount(selectedRows.length + 1);
-  // };
   const handleRowClick = (row) => {
     setSelectAllChecked(false);
     console.log(selectedRows, "fffffffffffff");
+
     setSelectedRows([row]); // Set the selected row to an array containing only the clicked row
-    // Update selected row count
+
     setSelectedRowCount(1);
   };
   function removeSpecialCharsFromArray(array) {
@@ -557,24 +651,10 @@ function AutoSearch(navigation) {
         console.error('Error fetching IP address:', error);
       }
     };
-
     fetchIpAddress();
   }, []);
 
-  function addRomanNumerals(word) {
-    let new_word = word;
-    if (word.includes("1ST")) {
-      new_word = new_word.replace('1ST', 'I');
-    } else if (word.includes("2ND")) {
 
-      new_word = new_word.replace('2ND', 'II');
-    } else if (word.includes("3RD")) {
-      new_word = new_word.replace('3RD', 'III');
-    } else if (word.includes("4TH")) {
-      new_word = new_word.replace('4TH', 'IV');
-    }
-    return word;
-  }
   const handleSearchMatchingAddresses = async () => {
     localStorage.setItem('selectedRows_1', JSON.stringify([]));
     localStorage.setItem('selectedMatchedRows', JSON.stringify(selectedRows));
@@ -583,14 +663,10 @@ function AutoSearch(navigation) {
       toast.error("Please select a case to start searching");
       return;
     }
-    // if (true) {
-    //   // localStorage.setItem('needInsertion',JSON.stringify(addr));
-    //   navigate('/output')
-    //   handleButtonClick(0);
-    //   return
 
-    // }
     function setSearchLogs(payload) {
+      let usertype = localStorage.getItem("user") || "undefined"
+      payload['usertype'] = usertype;
       const requestPromise = fetch(`${url.API_url}/api/create_log`, {
         method: "POST",
         headers: {
@@ -611,19 +687,14 @@ function AutoSearch(navigation) {
       const startTime = new Date();
       let finalStr = await searchMatchingResultAlgoAgain(row.SAP_ADDRESS, []);
       const inputAddress = row.SAP_ADDRESS;
-
-      //this function will check whether the word includes some exclude_terms or not
       function containsWord(word) {
         if (word && word.includes('NO')) {
           return false;
         }
-        return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase())); //true or false
+        return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase()))
       }
-      // function containsWord1(word) {
-      //   console.log(exclude_terms1,"exclude_terms1exclude_terms1exclude_terms1exclude_terms1")
-      //   return exclude_terms1.some(arrWord => word.includes(arrWord.toUpperCase()))
-      // }
-      let new_arr = finalStr.filter(x => !containsWord(x));
+
+      let new_arr = finalStr.filter(x => !containsWord(x))
       finalStr = new_arr;
       const uniqueArray = [...new Set(finalStr)];
       finalStr = uniqueArray;
@@ -648,7 +719,6 @@ function AutoSearch(navigation) {
       let r1 = [];
       let isAreaExis1t = [];
 
-
       finalStr.forEach(x => {
         const prefix = x.match(/^([a-zA-Z]+)(.*)/);
         if (prefix && prefix.length) {
@@ -666,17 +736,11 @@ function AutoSearch(navigation) {
         }
       });
       console.log(r, "qwerty...");
-
-
       let areaExist2 = [];
       console.log(uniqueArray1, "ajay sir");
-      r.map(x => {
-        x = removeWordsFromArray(x, removeonlystr)
-
-      });
+      r.map(x => x = removeWordsFromArray(x, removeonlystr));
 
       let sealing_str = []
-
       uniqueArray1.forEach(x => {
         const prefix = x.match(/^([a-zA-Z]+)(.*)/);
         if (prefix && prefix.length) {
@@ -694,7 +758,7 @@ function AutoSearch(navigation) {
             }
 
           } else {
-            console.log(arr, "arrarrarr")
+            console.log(arr, "array")
             r1.push(x, ...arr)
           }
         } else {
@@ -706,7 +770,7 @@ function AutoSearch(navigation) {
       r = r.filter(x => !isAreaExis1t.includes(x));
       console.log(r, "isAreaExis1tisAreaExis1t 111")
       sealing_str = [...sealing_str];
-      sealing_str = sealing_str.filter(x => x != "PHASE")
+      sealing_str = sealing_str.filter(x => x !== "PHASE")
 
       r1 = [...r1, ...isAreaExis1t, ...areaExist2];
       r = r.map(x => {
@@ -734,25 +798,21 @@ function AutoSearch(navigation) {
           }
         } else {
           return true
-
         }
-
       });
       r = r.filter(
         (value, index, self) => self.indexOf(value) === index
       );
       const nonKhElements1 = r.filter(element => !element.startsWith("KH") && !element.startsWith("KN"));
 
-      if (nonKhElements1.length == 0) {
+      if (nonKhElements1.length === 0) {
         // alert("kamal")
         let filter = r1.filter(x => x.startsWith("KH"));
         console.log(filter, "filterfilterfilter")
         r.push(...filter);
         r1 = r1.filter(x => !x.startsWith("KH"));
-
       } else {
         // r = r.filter(element => isNaN(element) || element >= 100);
-
       };
       if (!r.length) {
         let data = localStorage.getItem('area#');
@@ -813,9 +873,19 @@ function AutoSearch(navigation) {
       finalSplitWords = finalSplitWords.filter(x => !x.startsWith("1100"));
       payload.secondFinalStr = payload.secondFinalStr.filter(x => !x.startsWith("1100"));
       payload.secondFinalStr = removeSpecialCharsFromArray(payload.secondFinalStr);
-      // payload.secondFinalStr = addRomanNumerals(payload.secondFinalStr);
-      // payload.secondFinalStr = payload.secondFinalStr.map(x=>x.startsWith("1100"))
+
       payload.finalStr = finalSplitWords;
+      let ndstr = [];
+      let khExist = payload.secondFinalStr.filter(x => x.startsWith("KH"));
+      if (khExist.length) payload.finalStr = [];
+      payload.secondFinalStr.map(x => {
+        if (x.startsWith("KH")) {
+          payload.finalStr.push(x)
+        } else {
+          ndstr.push(x)
+        }
+      });
+      payload.secondFinalStr = ndstr;
       payload['addr'] = row;
       localStorage.setItem('searchStr', JSON.stringify(payload));
       try {
@@ -831,7 +901,7 @@ function AutoSearch(navigation) {
         }
         let data = await response.json();
         row.final = data.results_count;
-        if (data.count <= 1000) {
+        if (data.count <= 2000) {
           saveExistRes[`${row.AUFNR}`] = data.results_count;
         }
         saveExistRes[`${row.AUFNR}_count`] = data.count;
@@ -842,6 +912,7 @@ function AutoSearch(navigation) {
         const seconds = Math.floor((timeElapsedInMilliseconds % 60000) / 1000);
         const milliseconds = (timeElapsedInMilliseconds % 1000).toString().padStart(3, '0').slice(0, 2);
         const formattedTime = `${minutes.toString().padStart(2, '0')} minutes, ${seconds.toString().padStart(2, '0')} seconds, ${milliseconds} milliseconds`;
+
         localStorage.setItem('manual', JSON.stringify(row));
         let obj = {
           "obj": {
@@ -870,7 +941,6 @@ function AutoSearch(navigation) {
     await Promise.all(requestPromises);
     localStorage.removeItem('existingResult');
 
-
     localStorage.setItem('saveExistRes', JSON.stringify(saveExistRes));
     navigate('/output');
     handleButtonClick(0);
@@ -894,362 +964,7 @@ function AutoSearch(navigation) {
 
     }
 
-    function setSearchLogs(payload) {
-      const requestPromise = fetch(`${url.API_url}/api/create_log`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-        .then((response) => response.json())
-        .then(async (data) => {
-
-        })
-    }
-
-
-    handleButtonClick(1);
-    // Function to check if a string is numeric and not smaller than 10
-
-    // setIsSearching(true); // Set the flag to indicate search in progress
-
-    const requests = []; function containsAlphanumericElement(arr) {
-      for (let element of arr) {
-        if (typeof element === 'string' && /^[a-zA-Z0-9]+$/.test(element)) {
-          return true; // Found an alphanumeric element, return true.
-        }
-      }
-      return false; // No alphanumeric elements found.
-    }
-    let addr = [];
-    selectedRows.forEach(async (row, index) => {
-      console.log(row, "mmmmmmmmmmmmmmmmm");
-      if (true) {
-        // Continue to the next iteration
-        if (index == selectedRows.length - 1) {
-          // localStorage.setItem('needInsertion',JSON.stringify(addr));
-          navigate('/output')
-          handleButtonClick(0);
-
-        }
-        return;
-      }
-      const startTime = new Date();
-      let finalStr = await searchMatchingResultAlgoAgain(row.SAP_ADDRESS, []);
-      const inputAddress = row.SAP_ADDRESS;
-      console.log(finalStr, "finalStrfinalStr");
-      let ex = containsAlphanumericElement(finalStr);
-      let final_arr1 = [];
-      function containsWord(word) {
-        return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase()))
-      }
-      function containsWord1(word) {
-        return exclude_terms1.some(arrWord => word.includes(arrWord.toUpperCase()))
-      }
-
-
-      let new_arr = finalStr.filter(x => !containsWord(x))
-      finalStr = new_arr;
-      const uniqueArray = [...new Set(finalStr)];
-      finalStr = uniqueArray;
-      let secondFinalStr = await searchMatchingResultAlgoAgainForWords(row.SAP_ADDRESS, []);
-      console.log(secondFinalStr, "exsting................");
-
-      // return 
-      secondFinalStr = secondFinalStr.filter(x => !containsWord1(x));
-
-      console.log(secondFinalStr, "exsting.1111...............");
-
-      let uniqueArray1 = [...new Set(secondFinalStr)];
-      uniqueArray1 = uniqueArray1.map(x => x.toUpperCase());
-      console.log(finalStr, "kaml sharma", uniqueArray1);
-      let gali_no = finalStr.filter(x => x.includes('GALI'));
-      finalStr = finalStr.filter(x => !x.includes('GALI'));
-
-      uniqueArray1 = uniqueArray1.filter(x => !x.includes('GALI'))
-
-      uniqueArray1.push(...gali_no);
-      uniqueArray1 = uniqueArray1.filter(x => !x.includes('EXT'));
-
-      let r = [];
-      let r1 = [];
-      let isAreaExis1t = [];
-
-
-      console.log(finalStr, "klklklklklklklklkl");
-
-      finalStr.forEach(x => {
-        const prefix = x.match(/^([a-zA-Z]+)(.*)/);
-        if (prefix && prefix.length) {
-          let arr = getWordArr(prefix[1], prefix[2]);
-          let isAreaExist = getWordArr1(prefix[1]);
-          if (isAreaExist.length) {
-            isAreaExis1t.push(x);
-            r1.push(x, ...arr)
-          } else {
-            console.log(arr, "arrarrarr")
-            r.push(x, ...arr)
-          }
-        } else {
-          r.push(x)
-        }
-
-      });
-
-      console.log(r, "qwerty...");
-
-
-      let areaExist2 = [];
-      console.log(uniqueArray1, "ajay sir");
-      r.map(x => {
-        x = removeWordsFromArray(x, removeonlystr)
-
-      })
-
-      uniqueArray1.forEach(x => {
-        const prefix = x.match(/^([a-zA-Z]+)(.*)/);
-        if (prefix && prefix.length) {
-          let arr = getWordArr(prefix[1], prefix[2]);
-          let area = getWordArr1(prefix[1]);
-          if (area.length) {
-            if (x && x.length <= 3) {
-              areaExist2.push(x)
-            } else {
-              let breakword = x.slice(0, 3)
-              areaExist2.push(x, breakword)
-            }
-
-          } else {
-            console.log(arr, "arrarrarr")
-            r1.push(x, ...arr)
-          }
-        } else {
-          r1.push(x)
-        }
-      });
-      console.log(r, "isAreaExis1tisAreaExis1t")
-      r = r.filter(x => !isAreaExis1t.includes(x));
-      console.log(r, "isAreaExis1tisAreaExis1t 111")
-
-      r1 = [...r1, ...isAreaExis1t, ...areaExist2];
-      r = r.map(x => {
-        return removeWordsFromArray(x, removeonlystr)
-      });
-      console.log(r, "isAreaExis1tisAreaExis1t 222")
-      // r = r.filter(element => isNaN(element));
-
-      // logic for handle khasra 
-      // Check if there are elements in arr that don't start with "kh"
-      const nonKhElements = r.filter(element => !element.startsWith("KH") && !element.startsWith("KN"));
-
-      console.log(nonKhElements, "nonKhElementsnonKhElements");
-
-      if (nonKhElements.length > 0) {
-        // Remove any element starting with "kh" from arr and push to arr2
-        r = r.filter(element => {
-          if (element.startsWith("KH") || element.startsWith("KN")) {
-            r1.push(element);
-            return false; // Remove "kh" element from arr
-          }
-          return true; // Keep non-"kh" element in arr
-        });
-      }
-
-
-      r = r.filter(x => {
-        console.log(x, "is number")
-        if (/^[0-9]+$/.test(x)) {
-          if ((+x) >= 10) {
-            return true
-          } else {
-            return false
-          }
-        } else {
-          return true
-
-        }
-
-      });
-      r = r.filter(
-        (value, index, self) => self.indexOf(value) === index
-      );
-
-      // r = r.filter(element => isNaN(element));
-
-      const nonKhElements1 = r.filter(element => !element.startsWith("KH") && !element.startsWith("KN"));
-
-      // r.push(...nonKhElements1)
-
-      if (nonKhElements1.length == 0) {
-        // alert("kamal")
-        let filter = r1.filter(x => x.startsWith("KH"));
-        console.log(filter, "filterfilterfilter")
-        r.push(...filter);
-        r1 = r1.filter(x => !x.startsWith("KH"));
-
-      } else {
-        let element = r.filter(element => isNaN(element));
-        if (element.length >= 1) {
-          r = r.filter(element => isNaN(element));
-        }
-      };
-      if (!r.length) {
-        let data = localStorage.getItem('area#');
-        if (data) {
-          data = JSON.parse(data);
-        } else {
-          data = []
-        };
-        let flattenedArray = [].concat(...data);
-        console.log(flattenedArray, "data ...");
-        r = r1;
-
-        r = r.filter(element => !flattenedArray.includes(element));
-        r = r.filter(element => element.length > 2);
-        r1 = r1.filter(element => !r.includes(element));
-
-
-      }
-      r1 = r1.filter(x => x != "VASANT");
-      r1 = r1.filter(x => x != "VAS");
-
-      console.log(nonKhElements, "nonKhElementsnonKhElements");
-      const payload = {
-        AUFNR: row.AUFNR,
-        REQUEST_NO: row.REQUEST_NO,
-        BUKRS: row.BUKRS,
-        VAPLZ: row.VAPLZ,
-        NAME: row.NAME,
-        TEL_NUMBER: row.TEL_NUMBER,
-        E_MAIL: row.E_MAIL,
-        ILART: row.ILART,
-        SAP_ADDRESS: row.SAP_ADDRESS,
-        finalStr: r,
-        secondFinalStr: r1
-      };
-      // handleButtonClick(0);
-      // let solrData1 = await solrData(payload);
-      // console.log(solrData,"")
-      payload['addr'] = row;
-      // return 
-      const requestPromise = fetch(`${url.API_url}/api/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-        .then((response) => response.json())
-        .then(async (data) => {
-
-          console.log(row.SAP_ADDRESS, "finalllllllllllllll")
-          // let final = await searchMatchingResultAlgo(row.SAP_ADDRESS, data.results_count, finalStr)
-          // console.log(final, "finalfinalfinal")
-
-          setMatchingAddresses((prevAddresses) => ({
-            ...prevAddresses,
-            [row.SAP_ADDRESS]: data,
-          }));
-          row.final = data.results_count;
-          addr.push(row)
-          // let needInsertion ={}
-          // const requestPromise = fetch(`${url.API_url_DEV}/insert_search_data`, {
-          //   method: "POST",
-          //   headers: {
-          //     "Content-Type": "application/json",
-          //   },
-
-          //   body: JSON.stringify(dbData),
-          // })
-          //   .then((response) => response.json())
-          //   .then(async (data) => {
-
-          const endTime = new Date();
-          // Calculate the time elapsed in minutes
-          const timeElapsedInMilliseconds = endTime - startTime;
-          const minutes = Math.floor(timeElapsedInMilliseconds / 60000);
-          const seconds = Math.floor((timeElapsedInMilliseconds % 60000) / 1000);
-          const milliseconds = (timeElapsedInMilliseconds % 1000).toString().padStart(3, '0').slice(0, 2); // Truncate to two digits
-
-          const formattedTime = `${minutes.toString().padStart(2, '0')} minutes, ${seconds.toString().padStart(2, '0')} seconds, ${milliseconds} milliseconds`;
-
-          let obj = {
-            "obj": {
-              "LogTextMain": finalStr.join(','),
-              "logTextAndSrc": uniqueArray1.join(','),
-              "MethodName": "AUTO-MODE",
-              "SolrSearchTime": formattedTime,
-              "REQUEST": row.AUFNR,
-              result_count: data.count,
-              IP_address: ipAddress
-            }
-          }
-
-          setSearchLogs(obj)
-
-          //  alert("success");
-          if (index == selectedRows.length - 1) {
-            // localStorage.setItem('needInsertion',JSON.stringify(addr));
-            navigate('/output')
-            handleButtonClick(0);
-
-          }
-
-
-
-          console.log(
-            `Matching addresses for SAP_ADDRESS ${row.SAP_ADDRESS}:`,
-            data
-          );
-          // Update search progress
-
-        })
-        .catch((error) => {
-          handleButtonClick(0);
-
-          console.error("Error fetching matching addresses:", error);
-        });
-
-      requests.push(requestPromise);
-    });
-
-    Promise.all(requests)
-      .then(() => {
-
-        console.log("All requests completed successfully.");
-        // Show a success toast
-        setIsSearching(false);
-        setSearchProgress(0);
-        // toast.success("Search Process is complete.");
-        // handleButtonClick(0);
-
-      })
-      .catch((error) => {
-        console.error("Error in one or more requests:", error);
-        setIsSearching(false);
-        handleButtonClick(0);
-
-        // Show an error toast
-        toast.error(
-          "Error in one or more requests. Search Process is complete."
-        );
-      });
   };
-
-  function startsAndEndsWithAlphabet(inputString) {
-    // Check if the string is not empty
-    if (inputString.length > 0) {
-      // Check if the first and last characters are alphabet letters
-      const firstChar = inputString.charAt(0);
-      const lastChar = inputString.charAt(inputString.length - 1);
-      const alphabetPattern = /[a-zA-Z]/;
-
-      if (alphabetPattern.test(firstChar) && alphabetPattern.test(lastChar)) {
-        return true; // The string starts and ends with alphabet letters
-      }
-    }
-  }
 
   const [selectAllChecked, setSelectAllChecked] = useState(false);
   const handleRowClickAll = (e) => {
@@ -1298,18 +1013,7 @@ function AutoSearch(navigation) {
 
     })
 
-    if (true) {
-      console.log("sss")
 
-
-    } else {
-      setSelectedRows([]);
-      console.log("kam")
-      setSelectAllChecked(false);
-      setSelectedRowCount(0)
-    }
-
-    console.log(selectAllChecked, "kkkkkjj")
 
 
   }
@@ -1322,12 +1026,6 @@ function AutoSearch(navigation) {
     const capitalizedString = cleanedString.toUpperCase();
 
     return capitalizedString;
-  }
-
-  function removeDatesFromArray(array) {
-    // Use the filter method to remove elements that are not of date type
-    const filteredArray = array.filter((element) => !(element instanceof Date));
-    return filteredArray;
   }
 
   const getWordArr = (word, rest) => {
@@ -1427,6 +1125,7 @@ function AutoSearch(navigation) {
         }
 
         if (!val) {
+
           clearInterval(interval);
           setProgressValue(100);
 
@@ -1438,6 +1137,7 @@ function AutoSearch(navigation) {
           return prevValue + 1;
         }
         setShowProgressBar(false)
+
         clearInterval(interval);
         return prevValue;
       });
@@ -1445,7 +1145,8 @@ function AutoSearch(navigation) {
   };
 
   const handleFetchCases1 = async (element) => {
-    console.log(urlDivision);
+    console.log(urlDivision)
+
     return new Promise((res, rej) => {
       let finalTotalCases = []
       if (!element || !element[0]) {
@@ -1482,6 +1183,7 @@ function AutoSearch(navigation) {
 
 
   };
+
   const handleAutomaticSearch = async () => {
     if (userId && urlDivision[0]) {
       let db = await handleFetchCases1(urlDivision);
@@ -1491,8 +1193,31 @@ function AutoSearch(navigation) {
   };
 
   useEffect(() => {
+    const fetchIpAddress = async () => {
+      try {
+        let obj = {
+          systemId: sessionStorage.getItem("systemId")
+        }
+        let data = await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_by_params_id`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(obj),
+        });
+        const apiResponse = await data.json();
+        setIcfData(apiResponse.data || []);
+      } catch (error) {
+        console.error('Error fetching IP address:', error);
+      }
+    };
+    fetchIpAddress();
+  }, []);
+
+  useEffect(() => {
     if (userId) {
       handleAutomaticSearch();
+
     }
   }, [userId]); // Ensure that this effect runs when userId changes
   useEffect(() => {
@@ -1506,48 +1231,86 @@ function AutoSearch(navigation) {
 
       <div className="table-container">
 
-        {/* <h1 className="header-req">REQUEST PENDING FOR CF</h1> */}
-        {/* <h2 style={{ marginTop: "7", marginBottom: "4" }}>
-          REQUEST PENDING FOR CF
-        </h2> */}
-        
+
         <div className="App">
 
         </div>
         {showProgressBar && <ProgressBar value={progressValue} max={100} />}
-        <div className="division-dropdown">
-          <select
-            value={selectedDivision}
-            onChange={(e) => setSelectedDivision(e.target.value)}
-            style={{ fontSize: "20px", alignItems: "center" }}
-          >
-            <option value="">Select a division</option>
-            {divisions.map((division) => (
-              <option key={division.VAPLZ} value={division.VAPLZ}>
-                {division.VAPLZ} - {division.DIVISION_NAME}
-              </option>
-            ))}
-          </select>
-          <div className="button-container">
-            <button onClick={handleFetchCases}>Fetch Cases</button>
-            {/* <button onClick={handleAutomaticSearch}>Automatic Search</button> */}
+        <div className="g-dropdown container-fluid">
 
-            <button onClick={handleSearchMatchingAddresses}>
-              Dues Process
-            </button>
-            <button onClick={handleReset}>Reset</button>
+          <div className="row">
+            <div className="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+
+              {divisions.length > 0 && (
+                <Select
+                  options={divisions}
+                  labelField="label"
+                  placeholder="Select Division"
+                  menuContainerStyle={{ width: '1000px', height: '600px' /* set your desired width here */, fontSize: '18px' /* set your desired font size here */ }}
+                  optionStyle={{ fontSize: '18px', fontWeight: "600", width: '1000px', color: "black", alignItems: "left", textAlign: "left"/* set your desired font size here */, width: '100%' /* set your desired width here */ }}
+                  dropdownHeight="400px"
+                  style={{ borderRadius: "9px", height: "39px", fontSize: '20px', textAlign: "left" }}
+                  searchable={true}
+                  valueField="value"
+                  onChange={setSelectedDivision}
+                />
+              )}
+
+            </div>
+            <div className="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+              <div className="button-container">
+
+                <button onClick={handleFetchCases} class="button-21" role="button">Fetch Cases</button>
+
+
+
+                <button type="button" style={{ width: "290px", justifyContent: "ceter" }} onClick={handleSearchMatchingAddresses} class="button-21"> Dues Process</button>
+                <button type="button" style={{ width: "120px", justifyContent: "center" }} onClick={handleReset} class="button-88">Reset</button>
+              </div>
+            </div>
+
           </div>
+
+
+
+
         </div>
-        <div className="top-pagination">
-          <div style={{ marginTop: "40px" }}> <p className="case-count">
-            Number of Cases Fetched: {caseCount}
-            {selectedRowCount > 0 && (
-              <>
-                {" "}
-                | {selectedRowCount} row{selectedRowCount > 1 ? "s" : ""} selected
-              </>
-            )}
-          </p></div>
+        <div className="top-paginastion container-fluid">
+          <div class="row" style={{ marginTop: "6px" }}>
+            <div className="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+              <div style={{ float: "left" }}> <p className="case-count">
+                Number of Cases Fetched: {caseCount}
+                {selectedRowCount > 0 && (
+                  <>
+                    {" "}
+                    | {selectedRowCount} row{selectedRowCount > 1 ? "s" : ""} selected
+                  </>
+                )}
+              </p></div>
+            </div>
+
+            <div className="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+              <div style={{ float: "left" }}>
+                <input
+                  placeholder="Search by Order No"
+                  type="text"
+                  className="mr-3 ml-3"
+                  id="aufnrSearch"
+                  style={{
+                    borderRadius: "9px", height: "39px", width: "330px", marginRight: "13px",
+                    paddingLeft: "10px",  // Adjust the left padding as needed
+
+                  }}
+                  onChange={(e) => handleAufnrSearch(e.target.value)}
+                />
+                <button className="ml-3" onClick={handleSearch}>Search</button>
+              </div>
+            </div>
+
+
+          </div>
+
+
 
           <div>{casesData.length > 0 && (
             <div className="pagination">
@@ -1568,7 +1331,6 @@ function AutoSearch(navigation) {
           )}</div>
         </div>
 
-
         {isSearching && (
           <div className="overlay">
             <CircularProgressWithLabel value={searchProgress} />
@@ -1579,18 +1341,24 @@ function AutoSearch(navigation) {
             <div class="container-fluid">
               <div class="row">
                 <div class="row">
+                  {/* Add the new field and search button */}
+
+
                   <div class="col-lg-12">
                     <div className="table-responsive table-bordered table-striped table-hover" style={{ maxHeight: "450px", overflow: "auto", marginBottom: "10px" }}>
                       <table className="table table-bordered table-striped table-hover" style={{ width: "100%", overflow: "scroll" }}>
                         <thead className="fixed-header">
                           <tr>
                             <th style={{ width: "5%" }}></th>
+
                             <th style={{ width: "12%" }}>ORDER NO</th>
                             <th style={{ width: "13%" }}>REQUEST NO</th>
                             {/* <th style={{ width: "13%" }}>DIVISION</th> */}
                             <th style={{ width: "16%" }}>NAME</th>
                             <th style={{ width: "30%" }}>APPLIED ADDRESS</th>
-                            <th style={{ width: "13%" }}>REQUEST TYPE</th>
+                            <th style={{ width: "10%" }}>REQUEST TYPE</th>
+                            <th style={{ width: "8%" }}>Dues Search</th>
+                            <th style={{ width: "9%" }}>MCD Search</th>
                           </tr>
                         </thead>
                         {currentRows.map((row) => (
@@ -1627,7 +1395,21 @@ function AutoSearch(navigation) {
                                   return row.ILART; // If none of the above, just display the original value
                               }
                             })()}</td>
+                            <td>
+                              {row.dues_found ? (
+                                <i className="fa fa-check" style={{ color: 'green', fontSize: '18px' }} />
+                              ) : (
+                                <i className="fa fa-times" style={{ color: 'red', fontSize: '18px' }} />
+                              )}
+                            </td>
 
+                            <td>
+                              {row.mcd_found ? (
+                                <i className="fa fa-check" style={{ color: 'green', fontSize: '18px' }} />
+                              ) : (
+                                <i className="fa fa-times" style={{ color: 'red', fontSize: '18px' }} />
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </table>
@@ -1639,24 +1421,7 @@ function AutoSearch(navigation) {
             </div>
           </div>
         )}
-        {/* Pagination controls */}
-        {/* {casesData.length > 0 && (
-          <div className="pagination">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <button style={{ backgroundColor:"transparent", color:"black"}}>Page {currentPage}</button>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={indexOfLastRow >= casesData.length}
-            >
-              Next
-            </button>
-          </div>
-        )} */}
+
       </div>
       <Toaster />
     </div>

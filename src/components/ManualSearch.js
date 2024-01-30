@@ -25,27 +25,20 @@ function ManualSearch() {
   const [existingResult, setExistingResult] = useState([]);
   const [isCalculateDuesDisabled, setCalculateDuesDisabled] = useState(false);
   const [isDuesSearchComplete, setDuesSearchComplete] = useState(false);
-  const [isDuesSearchComplete_1, setDuesSearchComplete_1] = useState(false);
+  const [isDuesSearchComplete_1, setDuesSearchComplete_1] = useState(null);
   const [isDuesSearchComplete_2, setDuesSearchComplete_2] = useState(false);
-
-
   const itemsPerPage = 100;
-
-
-  // let  =[];
   let [selectedRows_1, setselectedRows_1] = useState([]);
-
   const [loading, setLoading] = useState(true);
   let [addressPart1, setAddressPart1] = useState("");
   let [addressPart2, setAddressPart2] = useState("");
   let [addressPart3, setAddressPart3] = useState("");
+  let [duesData_, setDuesData_] = useState(null);
   const [searchResults, setSearchResults] = useState([]); // New state for search results;
   const [searchResults1, setSearchResults1] = useState([]); // New state for search results;
   const [searchResults2, setSearchResults2] = useState([]); // New state for search results;
   const [is_first, set_is_first] = useState(false); // New state for search results
-
   const [searchResultsOther, setSearchResultsOther] = useState([]); // New state for search results
-
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 10;
@@ -83,15 +76,12 @@ function ManualSearch() {
     })
   }
 
-
   function checkBt() {
-    //get the value from key in sessionStorage
     let dues = sessionStorage.getItem("duesSearchComplete");
     let mcd = sessionStorage.getItem("mcdSearchComplete");
-
-    //its like a flag =1 if dues search is complete
     if (dues) {
       setDuesSearchComplete_2(true);
+
     } else {
       setDuesSearchComplete_2(0);
 
@@ -99,11 +89,11 @@ function ManualSearch() {
     if (dues && mcd) {
       setDuesSearchComplete_1(true)
     } else {
-      setDuesSearchComplete_1(0)
+      setDuesSearchComplete_1(null)
     }
   }
-  //this function retrieves and processes data from local storage, updating the state variables  
-  //It ensures that existing results are modified and used to update different parts of the application, and it also checks for the presence of a required parameter (aufnr).
+
+
   function setDues() {
     let existingResult = localStorage.getItem("saveExistRes");
     if (existingResult) {
@@ -116,10 +106,13 @@ function ManualSearch() {
             ...x
           }
         })
-        setSearchResults(existingResult)
+        let dues_filter = existingResult.filter(x => x.solr_dues > 500)
+        setSearchResults(dues_filter);
+        let obj = getCounts(dues_filter);
+        // setSearchResults(existingResult)
         setSearchResults1(existingResult)
         setSearchResultsOther(existingResult);
-        let obj = getCounts(existingResult);
+        // let obj = getCounts(existingResult);
         setCounts(obj)
         let exist = existingResult.map(x => x.CONTRACT_ACCOUNT);
         console.log(exist)
@@ -139,13 +132,8 @@ function ManualSearch() {
     }
 
   }
-
   // Load state from sessionStorage on component mount
-
-
   // Update sessionStorage whenever isDuesSearchComplete changes
-
-
 
   const handleInnerDataPagination = (page, data) => {
     const startIndex = page * itemsPerPage;
@@ -159,106 +147,93 @@ function ManualSearch() {
   };
   const [ipAddress, setIpAddress] = useState(null);
 
-  useEffect(() => {
-    const fetchIpAddress = async () => {
-      try {
-        const response = await axios.get('https://api.ipify.org/?format=json');
-        setIpAddress(response.data.ip);
-      } catch (error) {
-        console.error('Error fetching IP address:', error);
+  const fetchIpAddress = async () => {
+    try {
+
+      let aufnr_11 = localStorage.getItem('manual');
+      if (aufnr_11) {
+        aufnr_11 = JSON.parse(aufnr_11);
       }
-    };
 
-    fetchIpAddress();
-  }, []);
-
-  useEffect(() => {
-    const fetchIpAddress = async () => {
-      try {
-
-        let aufnr_11 = localStorage.getItem('manual');
-        if (aufnr_11) {
-          aufnr_11 = JSON.parse(aufnr_11);
-        }
-
-        let obj = {
-          aufnr: aufnr_11.AUFNR,
-          systemId: sessionStorage.getItem("systemId")
-        }
-        let data = await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_by_params`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(obj),
-        });
-
-        const apiResponse = await data.json();
-        if (apiResponse) {
-          const responseData = apiResponse.data;
-          const duesData = responseData.duesData || [];
-          const mcd = responseData.mcdData || [];
-
-          if (duesData.length) {
-            setDuesSearchComplete_2(true);
-
-          } else {
-            setDuesSearchComplete_2(0);
-
-          }
-          if (duesData.length && mcd.length) {
-            setDuesSearchComplete_1(true);
-          } else {
-            setDuesSearchComplete_1(0);
-
-          }
-
-
-          const selectedDues = responseData.selectedDues || [];
-
-          // Transformations or other logic can be applied here
-
-          setSearchResults(duesData);
-          setSearchResults1(duesData);
-          setSearchResultsOther(duesData);
-
-          let obj = getCounts(duesData);
-          setCounts(obj);
-
-          let exist = duesData.map(x => x.CONTRACT_ACCOUNT);
-          setExistingResult(exist);
-
-          setselectedRows_1(selectedDues);
-        }
-
-      } catch (error) {
-        setDues()
-        console.error('Error fetching IP address:', error);
+      let obj = {
+        aufnr: aufnr_11.AUFNR,
+        systemId: sessionStorage.getItem("systemId")
       }
-    };
+      let data = await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_by_params`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(obj),
+      });
 
+      const apiResponse = await data.json();
+      if (apiResponse) {
+        const responseData = apiResponse.data;
+        setDuesData_(responseData);
+        const duesData = responseData.duesData || [];
+        const mcd = responseData.mcdData || [];
+
+        if (duesData.length) {
+          setDuesSearchComplete_2(true);
+
+        } else {
+          setDuesSearchComplete_2(0);
+
+        }
+        if (duesData.length && responseData.tpye && responseData.tpye == 2) {
+          setDuesSearchComplete_1(true);
+        } else {
+          setDuesSearchComplete_1(null);
+        }
+        const selectedDues = responseData.selectedDues || [];
+        // Transformations or other logic can be applied here
+
+        setSearchResults(selectedDues);
+        setSearchResults1(selectedDues);
+        setSearchResultsOther(selectedDues);
+
+        let obj = getCounts(selectedDues);
+        setCounts(obj);
+
+        let exist = selectedDues.map(x => x.CONTRACT_ACCOUNT);
+        setExistingResult(exist);
+
+        setselectedRows_1(selectedDues);
+
+
+        if (!duesData.length) {
+          setDues()
+        }
+      }
+
+    } catch (error) {
+      setDues()
+      console.error('Error fetching IP address:', error);
+    }
+  };
+  useEffect(() => {
     fetchIpAddress();
   }, []);
 
   // Function to handle forward and next pagination controls
   const getCounts = (data) => {
-    if (!data)
-      return {
-        normal: [].length,
-        total: 0,
-        enforcement: 0,
-        legal: 0,
-        mcd: 0,
-        move: 0
-      }
+    if (!data) return {
+      normal: [].length,
+      total: 0,
+      enforcement: 0,
+      legal: 0,
+      mcd: 0,
+      move: 0
+    }
     let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
     return {
-      normal: data.filter(x => x.BP_TYPE === 'Normal').length,
+      normal: data.filter(x => x.BP_TYPE == 'Normal').length,
       total: data.length,
-      enforcement: data.filter(x => x.BP_TYPE === 'ENFORCEMENT').length,
-      legal: data.filter(x => x.BP_TYPE === 'LEGAL').length,
-      mcd: data.filter(x => x.BP_TYPE === 'Sealing').length,
-      move: data.filter(x => x.BP_TYPE === 'Normal' && !x.MOVE_OUT.includes('9999')).length,
+      enforcement: data.filter(x => x.BP_TYPE == 'ENFORCEMENT').length,
+      legal: data.filter(x => x.BP_TYPE == 'LEGAL').length,
+      mcd: data.filter(x => x.BP_TYPE == 'Sealing').length,
+      move: data.filter(x => x.BP_TYPE == 'Normal' && !x.MOVE_OUT.includes('9999')).length,
       other: data.filter(x => !bps.includes(x.BP_TYPE)).length
     }
   };
@@ -267,7 +242,7 @@ function ManualSearch() {
   if (aufnr_11) {
     aufnr_11 = JSON.parse(aufnr_11);
     // console.log(aufnr_11,"aufnr_11");
-    if (aufnr_1.AUFNR != aufnr_11.AUFNR) {
+    if (aufnr_1.AUFNR !== aufnr_11.AUFNR) {
       setAufnr_1(aufnr_11);
       setCaseData(aufnr_11);
     }
@@ -359,28 +334,24 @@ function ManualSearch() {
   //   }
 
   // }, [aufnr]);
+  
   function capitalizeWord(word) {
     if (typeof word !== 'string' || word.length === 0) {
       return word;
     }
-
     return word.toUpperCase();
   }
-
-
 
   // Define the result threshold
   const result_threshold = 100;
 
   // Define a function to split words separated by special characters
-
   let exclude_terms = ["khasra", "kh", "tagore", "first", "second", "third", "fourth", "top", "basement",
     "floor", "first floor", "ground floor", "second floor", "third floor", "front", "back", "side",
     "ff", "sf", "tf", "gf", "g/f", "f/f", "s/f", "t/f", "no", "number", "fourth floor", "gali", "juggi", "khanpur", "janak",
     "uttam", "alaknanda", "nehru"
   ]
 
-  //remove the special characters from the string merge it into on word after removing spaces
   function cleanAndUppercaseString(inputString) {
     // Remove special characters and spaces
     const cleanedString = inputString.replace(/[^\w\s]/g, '');
@@ -410,65 +381,158 @@ function ManualSearch() {
     return resultString;
   }
 
-
   function containsNumber(str) {
     return /\d/.test(str);
   }
 
-
   const handleCalculateDues = async (index, user) => {
+    let count = await getCounts(selectedRows_1);
+    console.log(counts);
+
+
+
+
     if (selectedRows_1) {
       Swal.fire({
         title: 'Are you sure?',
-        text: 'Do you want to complete the dues search?',
+        text: '',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, complete it!'
-      })
-        .then(async (result) => {
-          if (result.isConfirmed) {
-            let systemId = sessionStorage.getItem("systemId");
-            let obj = {
-              systemId,
-              type: "dues",
-              aufnr: aufnr_1.AUFNR,
-              duesData: searchResults,
-              selectedDues: selectedRows_1
-            }
-            console.log(obj);
-            await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+        confirmButtonText: 'Yes, complete it!',
+        html: `<style>
+          .enforcement-label { color: blue; }
+          .normal-label { color: green; }
+          .other-label { color: orange; }
+          .move-out-label { color: purple; }
+          .legal-label { color: red; }
+        </style>
+        
+        <div>
+        <h5>Do you want to complete the dues search?</h5>
+        <p><span id="enforcementLabel" class="enforcement-label">Enforcement selected</span> - <span id="enforcementCount" class="enforcement">${count.enforcement}</span></p>
+        <p><span id="normalLabel" class="normal-label">Normal selected</span> - <span id="normalCount" class="normal">${count.normal}</span></p>
+        <p><span id="otherLabel" class="other-label">Other selected</span> - <span id="otherCount" class="other">${count.other}</span></p>
+        <p><span id="moveOutLabel" class="move-out-label">Move out selected</span> - <span id="moveOutCount" class="move-out">${count.move}</span></p>
+        <p><span id="legalLabel" class="legal-label">Legal selected</span> - <span id="legalCount" class="legal">${count.legal}</span></p>
+      </div>`
+
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          let systemId = sessionStorage.getItem("systemId");
+          let obj = {
+            systemId,
+            // type: 0,
+            aufnr: aufnr_1.AUFNR,
+            duesData: searchResults,
+            selectedDues: selectedRows_1
+          }
+          console.log(obj);
+          await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(obj),
+          });
+          console.log(duesData_);
+
+          if (duesData_ && duesData_.tpye == 2) {
+            let caNumbers = selectedRows_1.map(x => x.CONTRACT_ACCOUNT)
+            let response = await fetch(`${url.API_url}/api/calculate_dues`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify(obj),
+              body: JSON.stringify({ caNumbers }),
             })
-
-            sessionStorage.setItem("duesSearchComplete", "true");
-            checkBt();
-            // User confirmed, proceed with saving data
-            localStorage.setItem("sealingData", JSON.stringify(selectedRows_1));
-            localStorage.setItem("selectedMatchedRows1", JSON.stringify([aufnr_1]));
-            // Show success message
-            Swal.fire({
-              title: 'Success!',
-              text: 'Dues search completed successfully.',
-              icon: 'success',
-              confirmButtonColor: '#3085d6',
+            let dues = await response.json();
+            console.log(dues, "duesduesduesdues")
+            // alert("S")
+            selectedRows_1.forEach(x => {
+              let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+              if (duess && duess.length) {
+                x.DUES = duess[0].AMOUNT
+              }
             });
-          }
-        });
 
-    } else {
+            let arr = [...selectedRows_1, ...duesData_.selectedMcd]
+            await fetch(`${url.API_url}/api/sendToDsk`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ data: arr, addr: aufnr_1 }),
+            })
+            exportToExcel(arr, aufnr_1);
+          } else {
+            let caNumbers = selectedRows_1.map(x => x.CONTRACT_ACCOUNT)
+            let response = await fetch(`${url.API_url}/api/calculate_dues`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ caNumbers }),
+            })
+            let dues = await response.json();
+            console.log(dues, "duesduesduesdues")
+            // alert("S")
+            selectedRows_1.forEach(x => {
+              let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+              if (duess && duess.length) {
+                x.DUES = duess[0].AMOUNT
+              }
+            });
+
+          }
+          console.log(selectedRows_1, "selectedRows_1selectedRows_1")
+          setselectedRows_1(selectedRows_1);
+          setSearchResults(selectedRows_1);
+
+
+
+          sessionStorage.setItem("duesSearchComplete", "true");
+
+          checkBt();
+          // User confirmed, proceed with saving data
+          // localStorage.setItem("sealingData", JSON.stringify(selectedRows_1));
+          localStorage.setItem("selectedMatchedRows1", JSON.stringify([aufnr_1]));
+
+          // Show success message
+          Swal.fire({
+            title: 'Success!',
+            text: 'Dues search completed successfully.',
+            icon: 'success',
+            confirmButtonColor: '#3085d6',
+          });
+        }
+      });
     }
   };
 
-
   // Define the columns you want to export
-  const columnsToExport = ["SEARCH_MODE", "CF_CATEGORY", "ACCOUNT_CLASS", "DUES", "MOVE_OUT", "CONTRACT_ACCOUNT", "CSTS_CD", "SAP_NAME", "SAP_ADDRESS", "SAP_POLE_ID", "TARIFF"];
+  const columnsToExport = ["SEARCH_MODE", "CF_CATEGORY", "ACCOUNT_CLASS", "SOLR_DUES", "SAP_DUES", "MOVE_OUT", "CONTRACT_ACCOUNT", "CSTS_CD", "SAP_NAME", "SAP_ADDRESS", "SAP_POLE_ID", "TARIFF"];
+  const [duesFilter, setDuesFilter] = useState("greater500"); // State to keep track of selected dues filter
 
+  // Function to handle the change in the dues filter radio buttons
+  const handleDuesFilterChange = (event) => {
+    const selectedFilter = event.target.value;
+    setDuesFilter(selectedFilter);
+    // Filter the data based on the selected radio button
+    const filteredData = searchResultsOther.filter((result) => {
+      if (selectedFilter === "all") {
+        return true; // Return all results if "All" is selected
+      } else if (selectedFilter === "zero") {
+        return result.solr_dues <= 500; // Filter results where DUES is 0
+      } else if (selectedFilter === "greater500") {
+        return result.solr_dues && result.solr_dues > 500; // Filter results where DUES is greater than 500
+      }
+    });
+    let data = getCounts(filteredData);
+    setCounts(data)
+    setSearchResults(filteredData);
+  };
 
   const exportToExcel = (data, user) => {
     if (!data.length) {
@@ -481,6 +545,8 @@ function ManualSearch() {
       let element = data[index];
       element['CF_CATEGORY'] = element['BP_TYPE'];
       element['ACCOUNT_CLASS'] = element['SAP_DEPARTMENT'];
+      element['SOLR_DUES'] = element['solr_dues'];
+      element['SAP_DUES'] = element['DUES'];
 
     }
     // Create a new array containing only the selected columns
@@ -709,17 +775,34 @@ function ManualSearch() {
     return uppercasedString;
   }
 
-
-
-
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState("");
 
   // Function to open the modal
-  const openModal = () => {
+  const openModal = async () => {
+    let systemId = sessionStorage.getItem("systemId");
+    let obj = {
+      systemId,
+      type: "dues",
+      aufnr: aufnr_1.AUFNR,
+      duesData: [],
+      selectedDues: []
+    }
+    console.log(obj);
+    await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(obj),
+    })
+    fetchIpAddress()
+    // sessionStorage.setItem("duesSearchComplete", "true");
+
     sessionStorage.removeItem("duesSearchComplete");
     checkBt();
     setselectedRows_1([]);
+    setSearchResults(searchResultsOther)
     localStorage.setItem("sealingData", JSON.stringify([]))
   };
 
@@ -743,7 +826,7 @@ function ManualSearch() {
     const query = e.target.value;
     await setSearchQuery(query);
     console.log(searchQuery, "searchQuery");
-    if (searchQuery.trim() === "") {
+    if (searchQuery.trim() == "") {
       console.log("adsx")
       setSearchError("Search query cannot be empty");
     } else {
@@ -761,8 +844,7 @@ function ManualSearch() {
 
   }
   const goBack = () => {
-    navigate('/output')
-
+    navigate('/auto')
   }
   function removeSpecialCharsAndCapitalize(inputString) {
     // Remove special characters and spaces, but keep numeric characters
@@ -773,7 +855,6 @@ function ManualSearch() {
 
     return capitalizedString;
   }
-
 
   // Function to handle the "Search" button click in the modal
   const handleSearchClick = async () => {
@@ -908,7 +989,6 @@ function ManualSearch() {
 
   };
 
-
   // Function to handle manual search button click
   const handleManualSearchClick = () => {
     if (!addressPart1 && !addressPart2 && !addressPart3) {
@@ -1009,8 +1089,9 @@ function ManualSearch() {
         // data.data.map()
         console.log(finalres, "finalres")
         data.data.push(...finalres);
-        setSearchResults(data.data);
-        let obj = getCounts(data.data);
+        let dues_filter = data.data.filter(x => x.solr_dues > 500)
+        setSearchResults(dues_filter);
+        let obj = getCounts(dues_filter);
         await setSearchResults1(data.data)
         await setSearchResultsOther(data.data);
         setCounts(obj);
@@ -1080,8 +1161,6 @@ function ManualSearch() {
     }
     console.log(selectedRows_1, ";;l;l;l;")
   };
-
-
 
   const handleRowClick_1 = (e) => {
     if (e.target.checked) {
@@ -1187,7 +1266,6 @@ function ManualSearch() {
     // localStorage.setItem('maunalSearchResult',JSON.stringify(searchResults));
   };
 
-
   const handleFilterByBPType = (bpType) => {
     if (!bpType) {
       setSearchResults(searchResults1);
@@ -1202,10 +1280,10 @@ function ManualSearch() {
       let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
       filteredData = searchResults1.filter((item) => !bps.includes(item.BP_TYPE))
     } else {
-      filteredData = searchResults1.filter((item) => item.BP_TYPE === bpType)
+      filteredData = searchResults1.filter((item) => item.BP_TYPE == bpType)
     }
 
-    if (bpType === "move") {
+    if (bpType == "move") {
       console.log(searchResults1)
       filteredData = searchResults1.filter((item) => item.BP_TYPE == 'Normal' && !item.MOVE_OUT.includes('9999'))
     }
@@ -1215,6 +1293,7 @@ function ManualSearch() {
     let obj = getCounts(searchResultsOther);
     setCounts(obj)
   };
+
   const [selectedTab, setSelectedTab] = useState('dues'); // Default tab is 'dues'
 
   const handleTabChange = (tab) => {
@@ -1240,7 +1319,7 @@ function ManualSearch() {
                 <th style={{ width: "15%" }}>NAME</th>
                 <th>REQUEST ADDRESS</th>
                 <th style={{ width: "10%" }}>REQUEST TYPE</th>
-                <th style={{ width: "10%" }}>ACTION</th>
+                {/* <th style={{ width: "10%" }}>ACTION</th> */}
 
               </tr>
               <tr>
@@ -1250,23 +1329,6 @@ function ManualSearch() {
                 <td>{aufnr_1.NAME}</td>
                 <td>{aufnr_1.SAP_ADDRESS}</td>
                 <td>{aufnr_1.ILART}</td>
-                <td>
-                  <div>
-                    {/* <label>Search Query</label> */}
-
-                    <Button
-                      variant="contained"
-                      color="warning"
-                      disabled={!isDuesSearchComplete_1} // Disable based on state
-
-                      onClick={(e) => handleCalculateDues1()}
-                      style={{ marginLeft: "10px" }}
-                    >
-                      Send To DSK
-                    </Button>
-                  </div>
-                </td>
-                {/* <td>{aufnr_1.E_MAIL}</td> */}
               </tr>
             </tbody>
           </table>
@@ -1274,14 +1336,68 @@ function ManualSearch() {
 
         {true && (
           <div class="tables-page-section">
-
-
             <div class="container-fluid">
               <div class="row">
-
                 <div className="col-12 text-center heading-link">
+                  <div className="row mb-2">
+                    <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2">
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="duesFilter"
+                          id="all"
+                          value="all"
+                          checked={duesFilter === "all"}
+                          onChange={handleDuesFilterChange}
+                        />
+                        <span style={{ fontStyle: "bold", fontWeight: 600, fontSize: `18px` }} className="form-check-label" htmlFor="all">All</span>
+                      </div>
+                      {/* <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="radio"
+              name="duesFilter"
+              id="zero"
+              value="zero"
+              checked={duesFilter === "zero"}
+              onChange={handleDuesFilterChange}
+            />
+            <span style={{fontStyle:"bold",fontWeight:600,fontSize:`18px`}}  className="form-check-label" htmlFor="zero">{"Dues < 500"}</span>
+          </div> */}
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="duesFilter"
+                          id="greater500"
+                          value="greater500"
+                          checked={duesFilter === "greater500"}
+                          onChange={handleDuesFilterChange}
+                        />
+                        <span style={{ fontStyle: "bold", fontWeight: 600, fontSize: `18px` }} className="form-check-label" htmlFor="greater500">{"Dues > 500"}</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <h5 style={{ color: 'darkslategray', cursor: 'pointer' }}>
+                    {/* <div class="container"> */}
+                    {/* <div class="pane mb-1 mt-1">
+        <label class="label">
+            <span>All</span>
+            <input id="left" class="input" name="radio" type="radio"/>
+        </label>
+        <label class="label">
+            <span>DUES</span>
+            <input id="middle" class="input" checked="checked" name="radio" type="radio"/>
+        </label>
+        <label class="label">
+            <span>{"> 500"}</span>
+            <input id="right" class="input" name="radio" type="radio"/>
+        </label>
+        <span class="selection"></span>
+    </div> */}
+                    {/* </div> */}
                     <span className="span5" style={{ color: 'black', fontWeight: "700" }}>
                       <span style={{ float: "left", cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                         <span onClick={() => handleFilterByBPType('Sealing')} >Selected Result: </span> {selectedRows_1.length}
@@ -1309,6 +1425,11 @@ function ManualSearch() {
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700" }} className="span1">
                       <span onClick={() => handleFilterByBPType('move')} >Move Out Cases:</span> {(counts.move || 0)}
                     </span>
+
+                    <span style={{ marginRight: "60px", color: "green", float: "right" }}>  {!isDuesSearchComplete_1 ? "" : "Sent To DSK"}
+
+                      {isDuesSearchComplete_1 && (<i className="fa fa-check" style={{ color: 'green', fontSize: '20px' }} />)}
+                    </span>
                   </h5>
                 </div>
                 <div class="row">
@@ -1316,14 +1437,13 @@ function ManualSearch() {
                     <div className="table-responsive table-bordered table-striped table-hover shadow-lg" style={{ maxHeight: "400px", overflow: "auto", marginBottom: "10px" }}>
                       <table className="table table2 table-bordered table-striped table-hover" >
                         <thead className="fixed-header">
-
-
                           <tr>
                             <th style={{ whiteSpace: 'nowrap', width: '5%' }}>
                               <input onChange={(e) => handleRowClick_1(e)} type="checkbox" name="" />
                             </th>
                             <th style={{ width: '5%' }}>MODE</th>
-                            <th style={{ whiteSpace: 'nowrap', width: '3%' }}>DUES</th>
+                            <th style={{ whiteSpace: 'nowrap', width: '3%' }}>SOLR DUES</th>
+                            <th style={{ whiteSpace: 'nowrap', width: '3%' }}>SAP DUES</th>
                             <th style={{ width: '10%' }}>MOVE OUT DATE</th>
                             <th style={{ width: '10%' }}>ACCOUNT CLASS</th>
                             <th style={{ width: '4%' }}>BP TYPE</th>
@@ -1341,7 +1461,6 @@ function ManualSearch() {
                           const isResultInExisting = existingResult.some(
                             (existingRow) => existingRow == result.CONS_REF
                           );
-
                           function formatDateToDDMMYYYY(dateString) {
                             const date = new Date(dateString);
                             const day = date.getDate().toString().padStart(2, '0');
@@ -1349,7 +1468,6 @@ function ManualSearch() {
                             const year = date.getFullYear();
                             return `${day}-${month}-${year}`;
                           }
-
                           return (
                             <tr key={index} style={{ backgroundColor: isResultInExisting ? '#transparent' : "" }}>
                               <td>
@@ -1361,9 +1479,9 @@ function ManualSearch() {
                                 />
                               </td>
                               <td>{result.SEARCH_MODE || 'MANUAL-MODE'}</td>
+                              <td>{result.solr_dues || '-'}</td>
                               <td>{result.DUES || '-'}</td>
                               <td style={{ width: '17%' }} >{result.MOVE_OUT ? formatDateToDDMMYYYY(result.MOVE_OUT) : "-"}</td>
-
                               <td>{result.SAP_DEPARTMENT}</td>
                               <td>{result.BP_TYPE}</td>
                               <td>{result.CONTRACT_ACCOUNT}</td>
@@ -1378,17 +1496,14 @@ function ManualSearch() {
                             </tr>
                           );
                         })}
-
                       </table>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {showLoading && (
           // CSS overlay for the loading component
           <div className="overlay" >
@@ -1402,7 +1517,7 @@ function ManualSearch() {
         <div style={{ padding: " 1px 16px 16px 16px", position: "sticky", top: "0px" }}>
           {showProgressBar && <ProgressBar value={progressValue} max={100} />}
 
-          <div className="container-fluid mb-2">
+          {!isDuesSearchComplete_1 && (<div className="container-fluid mb-2">
             <div className="row justify-content-center">
               {/* <div className="col-2">
               <h4 className="mt-2" style={{ color:"#007bff"}}>Manual Search</h4>
@@ -1457,49 +1572,15 @@ function ManualSearch() {
                 >
                   Start Manual Search
                 </Button>
-
               </div>
-
-
             </div>
             <hr style={{ width: "85%", margin: "10px auto", borderColor: "black", borderBottom: "1px solid black" }} />
           </div>
+          )}
           {/* Inputs and buttons */}
           <Grid container spacing={2} style={{ textAlign: "center" }}>
-            {/* 
-          <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="House/Plot/Block/Khasra"
-              variant="outlined"
-              value={addressPart1}
-              onChange={(e) => setAddressPart1(e.target.value)}
-            />
-          </Grid> */}
-
-            {/* <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="Number(House/Plot/Block/Khasra)"
-              variant="outlined"
-              value={addressPart2}
-              onChange={(e) => setAddressPart2(e.target.value)}
-            />
-          </Grid> */}
-
-            {/* <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="Area"
-              variant="outlined"
-              value={addressPart3}
-              onChange={(e) => setAddressPart3(e.target.value)}
-            />
-          </Grid> */}
-
             <Grid item xs={12} >
-
-              {true && (<Button
+              {!isDuesSearchComplete_1 && (<Button
                 variant="contained"
                 disabled={isDuesSearchComplete_2}
                 color="success"
@@ -1508,9 +1589,8 @@ function ManualSearch() {
               >
                 Complete Dues Search
               </Button>
-
               )}
-              {true > 0 && (<Button
+              {!isDuesSearchComplete_1 && (<Button
                 variant="contained"
                 color="warning"
                 onClick={(e) => openModal()}
@@ -1518,32 +1598,25 @@ function ManualSearch() {
               >
                 Reset
               </Button>
-
               )}
-
               <div class='modal modal-container' id="searchModal" tabindex="-1" role="dialog" style={{ top: "270px", left: "968px", width: "440px", position: "absolute" }}>
                 <div class="modal-dialog modal-container" role="document">
                   <div className="modal-content modal-container">
                     <div id="head" style={{ textAlign: "center", padding: "6px", display: "block", background: "linear-gradient(to bottom,#69c 40%,#316598) !important" }} className="modal-header">
                       <h5 style={{ textAlign: "center" }} className="modal-title">Refine Search</h5>
-
                     </div>
                     <div className="modal-body" style={{ padding: "9px" }}>
                       {/* Search Input */}
                       <div className="form-group">
-
                         <div class="d-flex justify-content-center " >
-
                           <div>
                             <label>Search Query</label>
-
                             <input
                               type="text"
                               className="form-control mr-5"
                               style={{ width: "95%" }}
                               value={searchQuery}
                               onKeyPress={(e) => handleKeyPress(e)}
-
                               onChange={handleSearchInputChange}
                             />
                           </div>
@@ -1569,7 +1642,6 @@ function ManualSearch() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -1583,11 +1655,10 @@ function ManualSearch() {
                 Back to Home
               </Button>
               )}
-              <div className="form-group searchBorder" style={{ display: "inline-block" }}>
+              {!isDuesSearchComplete_1 && (<div className="form-group searchBorder" style={{ display: "inline-block" }}>
                 <div class="d-flex justify-content-center mr-3" style={{ marginLeft: "5px" }}>
                   <div>
                     {/* <label>Search Query</label> */}
-
                     <input
                       type="text"
                       className="form-control mr-5"
@@ -1599,9 +1670,7 @@ function ManualSearch() {
                       onChange={handleSearchInputChange}
                     />
                   </div>
-
                   <div className="ml-3" style={{ marginLeft: "0px" }}>
-
                     <Button
                       variant="contained"
                       color="warning"
@@ -1610,7 +1679,6 @@ function ManualSearch() {
                     >
                       Refine Seach
                     </Button>
-
                     {true && (<Button
                       variant="contained"
                       color="info"
@@ -1619,7 +1687,6 @@ function ManualSearch() {
                     >
                       Original List
                     </Button>
-
                     )}
 
                     {/* <button
@@ -1630,14 +1697,11 @@ function ManualSearch() {
       Search
     </button> */}
                   </div>
-
                 </div>
-              </div>
+              </div>)}
             </Grid>
           </Grid>
         </div>
-
-
         <div style={{ marginTop: "-32px" }}>
           {/* <ReactPaginate
                   pageCount={Math.ceil(searchResultsOther.length / itemsPerPage)}
@@ -1650,7 +1714,6 @@ function ManualSearch() {
         nextLabel={<i className="next" />}
                 /> */}
         </div>
-
       </div>
     </>
 

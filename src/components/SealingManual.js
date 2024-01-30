@@ -6,6 +6,7 @@ import axios from "axios";
 import "../components/AutoSearch.css"
 import { padding, style } from "@mui/system";
 import Swal from 'sweetalert2';
+import Select from "react-dropdown-select";
 
 // import CamelCaseTable from '../components/camelCaseTable.js';
 import ReactPaginate from 'react-paginate';
@@ -19,12 +20,16 @@ function SealingManual() {
   const { aufnr } = useParams();
   const [caseData, setCaseData] = useState({});
   const [aufnr_1, setAufnr_1] = useState({});
+  let [duesData_, setDuesData_] = useState(null);
+  const [divisions, setDivisions] = useState([]);
+  const [selectedDivision, setSelectedDivision] = useState([]);
+
   const [counts, setCounts] = useState({});
   const [isDrop, setIsDrop] = useState(0);
   const [existingResult, setExistingResult] = useState([]);
   const [isCalculateDuesDisabled, setCalculateDuesDisabled] = useState(false);
   const [freeze, set_freeze] = useState(false);
-  const [isDuesSearchComplete_1, setDuesSearchComplete_1] = useState(false);
+  const [isDuesSearchComplete_1, setDuesSearchComplete_1] = useState(null);
   const [isDuesSearchComplete, setDuesSearchComplete] = useState(false);
   const [isDuesSearchComplete_2, setDuesSearchComplete_2] = useState(false);
 
@@ -41,7 +46,7 @@ function SealingManual() {
   // let  =[];
   let [selectedRows_1, setselectedRows_1] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   let [addressPart1, setAddressPart1] = useState("");
   let [addressPart2, setAddressPart2] = useState("");
   let [addressPart3, setAddressPart3] = useState("");
@@ -99,6 +104,30 @@ function SealingManual() {
     setSearchResults(items)
   };
   const [ipAddress, setIpAddress] = useState(null);
+  const fetchDivisions = () => {
+    fetch(`${url.API_url}/api/divisions_on_page_load1`)
+      .then((response) => response.json())
+      .then((data) => {
+        let arr = []
+        if (data.data) {
+          data.data.forEach(x => {
+            arr.push({
+              value: x.VAPLZ,
+              label: x.VAPLZ
+            })
+          })
+        }
+
+        console.log(arr, "arrarrarrarr")
+        setDivisions(arr);
+      })
+      .catch((error) => {
+        console.error("Error fetching divisions:", error);
+      });
+  };
+  useEffect(() => {
+    fetchDivisions();
+  }, []);
 
 
   // Function to handle forward and next pagination controls
@@ -158,62 +187,35 @@ function SealingManual() {
       if (!val) {
         setProgressValue(100)
         clearInterval(interval);
-        return;
+        return
       }
       setProgressValue((prevValue) => {
-        if (val && prevValue === 98) {
+        if (val && prevValue == 98) {
           return prevValue;
         }
+
         if (!val) {
+
           clearInterval(interval);
           setProgressValue(100);
+
           return 100;
+
         }
 
         if (prevValue < 100) {
           return prevValue + 1;
         }
         setShowProgressBar(false)
+
         clearInterval(interval);
         return prevValue;
       });
     }, 100);
   };
-  useEffect(() => {
-    let existingResult = localStorage.getItem("sealing_data_1");
-    if (existingResult) {
-      existingResult = JSON.parse(existingResult);
-      set_auto_count(existingResult.length)
-      if (existingResult) {
-        existingResult = existingResult.map(x => {
-          x.SEARCH_MODE = "AUTO-MODE";
-          return {
-            ...x
-          }
-        })
-        setSearchResults(existingResult)
-        setSearchResults1(existingResult)
-        setSearchResultsOther(existingResult);
-        let obj = getCounts(existingResult);
-        setCounts(obj)
-        let exist = existingResult.map(x => x.CONTRACT_ACCOUNT);
-        console.log(exist)
-        setExistingResult(exist)
-      }
-    }
+  // useEffect(() => {
 
-
-    let checked = localStorage.getItem("sealing_set#");
-    if (checked) {
-      checked = JSON.parse(checked);
-      setselectedRows_1(checked)
-    }
-    if (!aufnr) {
-      console.error("AUFNR parameter is missing.");
-      setLoading(false);
-      return;
-    }
-  }, [aufnr]);
+  // }, [aufnr]);
   function capitalizeWord(word) {
     if (typeof word !== 'string' || word.length === 0) {
       return word;
@@ -411,6 +413,7 @@ function SealingManual() {
               currentWordsArray = [];
             }
 
+
             console.log(currentWordsArray, "currentWordsArraycurrentWordsArray")
             // Initialize a list to store filtered results for the current word
             const currentWordFilteredResults = [];
@@ -462,44 +465,259 @@ function SealingManual() {
     })
 
   };
+  const [menuPlacement, setMenuPlacement] = useState('bottom'); // State to control menu placement
 
+  // Function to dynamically set menu placement based on available space
+  const handleMenuPlacement = () => {
+    const inputElement = document.getElementById('division-select'); // Assuming the input id is 'division-select'
+
+    if (inputElement) {
+      const inputRect = inputElement.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const spaceBelow = windowHeight - inputRect.bottom;
+      const spaceAbove = inputRect.top;
+
+      // Set menuPlacement based on available space
+      setMenuPlacement(spaceBelow < 300 && spaceAbove > spaceBelow ? 'top' : 'bottom');
+    }
+  };
+
+  const [satisfactionAuto, setSatisfactionAuto] = useState(false);
+  const [satisfactionManual, setSatisfactionManual] = useState(false);
+
+  useEffect(() => {
+    handleMenuPlacement(); // Call it once to set the initial menu placement
+    window.addEventListener('resize', handleMenuPlacement); // Add event listener for window resize
+    return () => window.removeEventListener('resize', handleMenuPlacement); // Cleanup on component unmount
+  }, []);
   const handleCalculateDues = (index, user) => {
     //alert("d")
+    let auto = selectedRows_1.filter(x => x.SEARCH_MODE == "AUTO-MODE").length;
 
-    if (selectedRows_1) {
+    let manual = selectedRows_1.filter(x => !x.SEARCH_MODE).length;
+
+
+
+    let satisfactionAuto = null; // Use null to represent no selection
+    let satisfactionManual = null; // Use null to represent no selection
+    if (duesData_ && duesData_.duesData.length) {
+
       Swal.fire({
-        title: 'Are you sure?',
-        text: 'Do you want to complete the MCD search?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, complete it!'
-      }).then((result) => {
+        title: 'Are you satisfied with the results?',
+        html: `
+      <div>
+      <h4 style="font-weight: bold; font-size: 18px; text-align: center;">Dues Auto Result</h4>
+      <span>
+          <input type="radio" name="satisfactionAuto" value="yes" ${satisfactionAuto === true ? 'checked' : ''}> Yes
+        </span>
+        <span>
+          <input type="radio" name="satisfactionAuto" value="no" ${satisfactionAuto === false ? 'checked' : ''}> No
+        </span>
+      </div>
+      </br>
+      <div>
+      <h4 style="font-weight: bold; font-size: 18px; text-align: center;">MCD Manual Result</h4>
+        <span>
+          <input type="radio" name="satisfactionManual" value="yes" ${satisfactionManual === true ? 'checked' : ''}> Yes
+        </span>
+        <span>
+          <input type="radio" name="satisfactionManual" value="no" ${satisfactionManual === false ? 'checked' : ''}> No
+        </span>
+      </div>
+
+
+      
+    `,
+        preConfirm: () => {
+          satisfactionAuto = document.querySelector('input[name="satisfactionAuto"]:checked')?.value;
+          satisfactionManual = document.querySelector('input[name="satisfactionManual"]:checked')?.value;
+
+          if (!satisfactionAuto || !satisfactionManual) {
+            console.log("dd")
+            Swal.showValidationMessage('Please answer both questions.');
+            return false; // Prevent closing the modal
+          }
+          return true;
+        },
+        confirmButtonText: 'Yes Complete !!',
+        // showCancelButton: true,
+        allowOutsideClick: () => !Swal.isLoading(), // Prevent closing when loading (on Confirm button click)
+      }).then(async (result) => {
         if (result.isConfirmed) {
-          localStorage.setItem("sealing_set#", JSON.stringify(selectedRows_1));
-          sessionStorage.setItem("mcdSearchComplete", "true");
-          checkBt();
-          let prev_res = localStorage.getItem("sealingData");
-          if (prev_res) {
-            prev_res = JSON.parse(prev_res)
-          } else {
-            prev_res = []
+          if (selectedRows_1) {
+            let tt = null
+
+            let systemId = sessionStorage.getItem("systemId");
+            let obj = {
+              systemId,
+              tpye: "2",
+              aufnr: aufnr_1.AUFNR,
+              mcdData: searchResults,
+              selectedMcd: selectedRows_1
+            }
+            console.log(obj);
+            await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(obj),
+            })
+
+
+            if (duesData_ && duesData_.duesData.length) {
+              tt = "w"
+              let caNumbers = duesData_.selectedDues.map(x => x.CONTRACT_ACCOUNT)
+              let response = await fetch(`${url.API_url}/api/calculate_dues`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ caNumbers }),
+              })
+              let dues = await response.json();
+              console.log(dues, "duesduesduesdues")
+              duesData_.selectedDues.forEach(x => {
+                let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+                if (duess && duess.length) {
+                  x.DUES = duess[0].AMOUNT
+                }
+              });
+              let arr = [...selectedRows_1, ...duesData_.selectedDues]
+              await fetch(`${url.API_url}/api/sendToDsk`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ data: arr, addr: aufnr_1 }),
+              })
+              exportToExcel(arr, aufnr_1)
+            }
+
+            sessionStorage.setItem("duesSearchComplete", "true");
+            checkBt();
+            localStorage.setItem("sealing_set#", JSON.stringify(selectedRows_1));
+            sessionStorage.setItem("mcdSearchComplete", "true");
+            let prev_res = localStorage.getItem("sealingData");
+            if (prev_res) {
+              prev_res = JSON.parse(prev_res)
+            } else {
+              prev_res = []
+            }
+            fetchIpAddress()
+            // Show success message
+            Swal.fire({
+              title: 'Success!',
+              text: tt ? `CF Process completed successfully.` : `MCD search completed successfully.`,
+              icon: 'success',
+              confirmButtonColor: '#3085d6',
+            });
           }
 
-          // Show success message
-          Swal.fire({
-            title: 'Success!',
-            text: 'MCD search completed successfully.',
-            icon: 'success',
-            confirmButtonColor: '#3085d6',
-          });
+
+
         }
       });
 
     } else {
+      if (selectedRows_1) {
+        let tt = null;
+        Swal.fire({
+          title: 'Are you sure?',
+          text: 'Do you want to complete the MCD search?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          html: `<style>
+        .enforcement-label { color: blue; }
+        .normal-label { color: green; }
+        .other-label { color: orange; }
+        .move-out-label { color: purple; }
+        .legal-label { color: red; }
+      </style>
+      
+      <div>
+      <h5>Do you want to complete the dues search?</h5>
+      <p><span id="enforcementLabel" class="enforcement-label">Auto-Mode Selected</span> - <span id="enforcementCount" class="enforcement">${auto}</span></p>
+      <p><span id="normalLabel" class="normal-label">Manual-Mode Selected</span> - <span id="normalCount" class="normal">${manual}</span></p>
+    </div>`,
+          confirmButtonText: 'Yes, complete it!'
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+
+            let systemId = sessionStorage.getItem("systemId");
+            let obj = {
+              systemId,
+              tpye: "2",
+              aufnr: aufnr_1.AUFNR,
+              mcdData: searchResults,
+              selectedMcd: selectedRows_1
+            }
+            console.log(obj);
+            await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(obj),
+            })
+
+
+            if (duesData_ && duesData_.duesData.length) {
+              tt = "s"
+              let caNumbers = duesData_.selectedDues.map(x => x.CONTRACT_ACCOUNT)
+              let response = await fetch(`${url.API_url}/api/calculate_dues`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ caNumbers }),
+              })
+              let dues = await response.json();
+              console.log(dues, "duesduesduesdues")
+              duesData_.selectedDues.forEach(x => {
+                let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+                if (duess && duess.length) {
+                  x.DUES = duess[0].AMOUNT
+                }
+              });
+              let arr = [...selectedRows_1, ...duesData_.selectedDues]
+              await fetch(`${url.API_url}/api/sendToDsk`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ data: arr, addr: aufnr_1 }),
+              })
+              exportToExcel(arr, aufnr_1)
+            }
+
+            sessionStorage.setItem("duesSearchComplete", "true");
+            checkBt();
+            localStorage.setItem("sealing_set#", JSON.stringify(selectedRows_1));
+            sessionStorage.setItem("mcdSearchComplete", "true");
+            let prev_res = localStorage.getItem("sealingData");
+            if (prev_res) {
+              prev_res = JSON.parse(prev_res)
+            } else {
+              prev_res = []
+            }
+            fetchIpAddress()
+            // Show success message
+            Swal.fire({
+              title: 'Success!',
+              text: tt ? `CF Process completed successfully.` : `MCD search completed successfully.`,
+              icon: 'success',
+              confirmButtonColor: '#3085d6',
+            });
+          }
+        });
+
+      }
     }
-    return
+
+
 
 
   };
@@ -516,12 +734,11 @@ function SealingManual() {
     }).then((result) => {
       if (result.isConfirmed) {
         let checked = localStorage.getItem("sealing_set#");
-        let arr = [];
+        let arr = []
         if (checked) {
           checked = JSON.parse(checked);
           arr.push(...checked)
         }
-
         let check = localStorage.getItem("sealingData");
         if (check) {
           check = JSON.parse(check);
@@ -607,7 +824,7 @@ function SealingManual() {
 
 
   // Define the columns you want to export
-  const columnsToExport = ["SEARCH_MODE", "CF_CATEGORY", "ACCOUNT_CLASS", "DUES", "MOVE_OUT", "CONTRACT_ACCOUNT", "CSTS_CD", "SAP_NAME", "SAP_ADDRESS", "SAP_POLE_ID", "TARIFF"];
+  const columnsToExport = ["SEARCH_MODE", "CF_CATEGORY", "ACCOUNT_CLASS", "SOLR_DUES", "SAP_DUES", "MOVE_OUT", "CONTRACT_ACCOUNT", "CSTS_CD", "SAP_NAME", "SAP_ADDRESS", "SAP_POLE_ID", "TARIFF"];
 
 
   const exportToExcel = (data, user) => {
@@ -621,6 +838,10 @@ function SealingManual() {
       let element = data[index];
       element['CF_CATEGORY'] = element['BP_TYPE'];
       element['ACCOUNT_CLASS'] = element['SAP_DEPARTMENT'];
+      element['SOLR_DUES'] = element['solr_dues'];
+      element['SAP_DUES'] = element['DUES'];
+
+
 
     }
     // Create a new array containing only the selected columns
@@ -858,7 +1079,24 @@ function SealingManual() {
   const [searchError, setSearchError] = useState("");
   // Function to open the modal
 
-  const openModal = () => {
+  const openModal = async () => {
+    let systemId = sessionStorage.getItem("systemId");
+    let obj = {
+      systemId,
+      tpye: "1",
+      aufnr: aufnr_1.AUFNR,
+      mcdData: searchResults,
+      selectedMcd: []
+    }
+    console.log(obj);
+    await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(obj),
+    })
+    fetchIpAddress();
     sessionStorage.removeItem("mcdSearchComplete");
     checkBt();
     setselectedRows_1([]);
@@ -903,7 +1141,7 @@ function SealingManual() {
 
   }
   const goBack = () => {
-    navigate('/sealing')
+    navigate('/auto')
   }
   function removeSpecialCharsAndCapitalize(inputString) {
     // Remove special characters and spaces, but keep numeric characters
@@ -956,6 +1194,7 @@ function SealingManual() {
 
   // Function to handle manual search button click
   const handleManualSearchClick = () => {
+
     if (!addressPart1 && !addressPart2 && !addressPart3) {
       return
     }
@@ -970,7 +1209,6 @@ function SealingManual() {
     // Combine the address parts into a single address
     let str_arr = ["1ST", "I", "2ND", "II", "3RD", "III"];
     let str_arr1 = ["BLOCK", "BLK", "PLOT", "PLT"];
-    //replace unwanted character from the address part with a alphanumeric string
     addressPart1 = addressPart1.replace(/[^\w\s]/g, '');
     addressPart2 = addressPart2.replace(/[^\w\s]/g, '');
     addressPart3 = addressPart3 ? addressPart3.trim("") : "";
@@ -996,9 +1234,10 @@ function SealingManual() {
       words_arr.push(words1);
 
     }
+    let filterDivision = selectedDivision.map(x => x.value)
     addressPart3 = addressPart3.replace(/[^\w\s-]/g, '');
     let drop = localStorage.getItem("dropDataList")
-    if (drop && drop === 1) {
+    if (drop && drop == 1) {
       setIsDrop(1)
     } else {
       setIsDrop(0)
@@ -1015,6 +1254,7 @@ function SealingManual() {
         addressPart2: [capitalizeWord(addressPart2)],
         addressPart3: capitalizeWord(addressPart3),
         VAPLZ: caseData.VAPLZ, // Assuming VAPLZ comes from case data
+        divisions: filterDivision
       }),
     })
       .then((response) => response.json())
@@ -1033,6 +1273,7 @@ function SealingManual() {
               finalres = existingResult1;
             }
           }
+
         };
         setSearchResults([]);
         setSearchResults1([]);
@@ -1242,28 +1483,131 @@ function SealingManual() {
     // localStorage.setItem('maunalSearchResult',JSON.stringify(searchResults));
   };
 
+  // useEffect(() => {
+  //   let dues = sessionStorage.getItem("duesSearchComplete");
+  //   let mcd = sessionStorage.getItem("mcdSearchComplete");   
+
+  //   if(mcd){
+  //     setDuesSearchComplete_2(true);
+
+  //   }else{
+  //     setDuesSearchComplete_2(0);
+
+  //   }
+
+
+  //    if (mcd && dues) {
+  //     setDuesSearchComplete_1(true);
+  //   }else{
+  //     setDuesSearchComplete_1(false)
+
+  //   }
+  // }, []);
+  const fetchIpAddress = async () => {
+    try {
+
+      let aufnr_11 = localStorage.getItem('manual');
+      if (aufnr_11) {
+        aufnr_11 = JSON.parse(aufnr_11);
+      }
+
+      let obj = {
+        aufnr: aufnr_11.AUFNR,
+        systemId: sessionStorage.getItem("systemId")
+      }
+      let data = await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_by_params`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(obj),
+      });
+
+      const apiResponse = await data.json();
+      if (apiResponse) {
+        const responseData = apiResponse.data;
+        const duesData = responseData.duesData || [];
+        const mcd = responseData.mcdData || [];
+        setDuesData_(responseData)
+        if (responseData.tpye && responseData.tpye == 2) {
+          setDuesSearchComplete_2(true);
+
+        } else {
+
+          setDuesSearchComplete_2(0);
+
+        }
+        if (duesData.length && responseData.tpye && responseData.tpye == 2) {
+          setDuesSearchComplete_1(true);
+        } else {
+          setDuesSearchComplete_1(null);
+        }
+        const selectedDues = responseData.selectedMcd || [];
+        // Transformations or other logic can be applied here
+        setSearchResults(mcd);
+        setSearchResults1(mcd);
+        setSearchResultsOther(mcd);
+        if (!mcd.length) {
+          setDues()
+        }
+
+        let obj = getCounts(mcd);
+        setCounts(obj);
+
+        // let exist = mcd.map(x => x.CONTRACT_ACCOUNT);
+        // setExistingResult(exist);
+
+        setselectedRows_1(selectedDues);
+      }
+
+    } catch (error) {
+      setDues()
+      console.error('Error fetching IP address:', error);
+    }
+  };
   useEffect(() => {
-    let dues = sessionStorage.getItem("duesSearchComplete");
-    let mcd = sessionStorage.getItem("mcdSearchComplete");
-
-    if (mcd) {
-      setDuesSearchComplete_2(true);
-
-    } else {
-      setDuesSearchComplete_2(0);
-
-    }
 
 
-    if (mcd && dues) {
-      setDuesSearchComplete_1(true);
-    } else {
-      setDuesSearchComplete_1(false)
-
-    }
+    fetchIpAddress();
   }, []);
 
 
+
+  function setDues() {
+    let existingResult = localStorage.getItem("sealing_data_1");
+    if (existingResult) {
+      existingResult = JSON.parse(existingResult);
+      set_auto_count(existingResult.length)
+      if (existingResult) {
+        existingResult = existingResult.map(x => {
+          x.SEARCH_MODE = "AUTO-MODE";
+          return {
+            ...x
+          }
+        })
+        setSearchResults(existingResult)
+        setSearchResults1(existingResult)
+        setSearchResultsOther(existingResult);
+        let obj = getCounts(existingResult);
+        setCounts(obj)
+        let exist = existingResult.map(x => x.id);
+        console.log(exist)
+        setExistingResult(exist)
+      }
+    }
+
+
+    let checked = localStorage.getItem("sealing_set#");
+    if (checked) {
+      checked = JSON.parse(checked);
+      setselectedRows_1(checked)
+    }
+    if (!aufnr) {
+      console.error("AUFNR parameter is missing.");
+      setLoading(false);
+      return;
+    }
+  }
   function checkBt() {
     let dues = sessionStorage.getItem("duesSearchComplete");
     let mcd = sessionStorage.getItem("mcdSearchComplete");
@@ -1277,9 +1621,10 @@ function SealingManual() {
     if (dues && mcd) {
       setDuesSearchComplete_1(true)
     } else {
-      setDuesSearchComplete_1(false)
+      setDuesSearchComplete_1(null)
     }
   }
+
 
   const handleFilterByBPType = (bpType) => {
     if (!bpType) {
@@ -1290,12 +1635,14 @@ function SealingManual() {
       return
     }
     // Filter the data based on the selected BP_TYPE
-    let filteredData = [];
-    if (bpType == "other") {
-      let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
-      filteredData = searchResults1.filter((item) => !bps.includes(item.BP_TYPE))
-    } else {
-      filteredData = searchResults1.filter((item) => item.BP_TYPE == bpType)
+    let filteredData = searchResults1;
+    if (bpType == "auto") {
+
+      filteredData = searchResults1.filter((item) => item.SEARCH_MODE == 'AUTO-MODE')
+    }
+    if (bpType == "manual") {
+
+      filteredData = searchResults1.filter((item) => item.SEARCH_MODE != 'AUTO-MODE')
     }
     console.log(filteredData, bpType, "llll", searchResults1)
     setSearchResults(filteredData);
@@ -1332,7 +1679,7 @@ function SealingManual() {
               <th style={{ width: "15%" }}>NAME</th>
               <th>REQUEST ADDRESS</th>
               <th style={{ width: "10%" }}>REQUEST TYPE</th>
-              <th style={{ width: "10%" }}>ACTION</th>
+              {/* <th style={{ width: "10%" }}>ACTION</th> */}
 
             </tr>
             <tr>
@@ -1342,22 +1689,7 @@ function SealingManual() {
               <td>{aufnr_1.NAME}</td>
               <td>{aufnr_1.SAP_ADDRESS}</td>
               <td>{aufnr_1.ILART}</td>
-              <td>
-                <div>
-                  {/* <label>Search Query</label> */}
 
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    disabled={!isDuesSearchComplete_1} // Disable based on state
-
-                    onClick={(e) => handleCalculateDues1()}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Send To DSK
-                  </Button>
-                </div>
-              </td>
               {/* <td>{aufnr_1.E_MAIL}</td> */}
             </tr>
           </tbody>
@@ -1366,12 +1698,8 @@ function SealingManual() {
 
       {true && (
         <div class="tables-page-section">
-
           <div class="container-fluid">
             <div class="row">
-
-
-
               {freeze && (
                 <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                   <span onClick={() => handleFilterByBPType('Sealing')} >Total Result: </span> {searchResults.length}
@@ -1380,6 +1708,8 @@ function SealingManual() {
               {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
                     <span onClick={() => handleFilterByBPType('Sealing')} >Selected Result: </span> {selectedRows_1.length}
                   </span> */}
+
+
 
 
 
@@ -1405,14 +1735,19 @@ function SealingManual() {
                     <span onClick={() => handleFilterByBPType('LEGAL')}>Legal:</span> {(counts.legal || 0)}
                   </span> */}
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
-                      <span onClick={() => handleFilterByBPType('Sealing')} >Auto Count MCD:</span> {(auto_count || 0)}
+                      <span onClick={() => handleFilterByBPType('auto')} >Auto Count MCD:</span> {(auto_count || 0)}
                     </span>
 
                     <span style={{ marginLeft: '46px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
-                      <span onClick={() => handleFilterByBPType('Sealing')} >Manual Count MCD:</span> {(manual_count || 0)}
+                      <span onClick={() => handleFilterByBPType('manual')} >Manual Count MCD:</span> {(manual_count || 0)}
                     </span>
+                    <span style={{ marginRight: "60px", color: "green", float: "right" }}>  {!isDuesSearchComplete_1 ? "" : "Sent To DSK"}
+
+                      {isDuesSearchComplete_1 && (<i className="fa fa-check" style={{ color: 'green', fontSize: '20px' }} />)}
 
 
+
+                    </span>
                     {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
                     <span onClick={() => handleFilterByBPType('Sealing')} >Prev Searched Count:</span> {(counts.mcd || 0)}
                   </span> */}
@@ -1447,18 +1782,16 @@ function SealingManual() {
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('Sealing')} >Regular Selected Count:</span> {(prev_C || 0)}
                     </span>
-
                     <span style={{ marginLeft: '46px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('Sealing')} >MCD Selected Count:</span> {(selectedRows_1.length || 0)}
                     </span>
-
-
                     {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
                    <span onClick={() => handleFilterByBPType('Sealing')} >Prev Searched Count:</span> {(counts.mcd || 0)}
                  </span> */}
                     {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span1">
                    <span onClick={() => handleFilterByBPType('other')} >Other:</span> {(counts.other || 0)}
                  </span> */}
+
                   </h5>
                 </div>
               )}
@@ -1548,18 +1881,46 @@ function SealingManual() {
           </div>
         </div>
       )}
+      {/* {selectedDivision.length && (<span style={{marginLeft:"30px"}}>Selected Division: {selectedDivision.map(x => x.label).join(', ')}</span>
+)} */}
 
       <div style={{ padding: " 1px 16px 16px 16px", position: "sticky", top: "0px" }}>
         {showProgressBar && <ProgressBar value={progressValue} max={100} />}
 
 
 
-        {!freeze && <div className="container-fluid mb-2">
+        {!isDuesSearchComplete_1 && (<div className="container-fluid mb-2">
           <div className="row justify-content-center">
+
+
             {/* <div className="col-2">
               <h4 className="mt-2" style={{ color:"#007bff"}}>Manual Search</h4>
             </div> */}
-            <div className="col-1"></div>
+            {/* <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
+            <div>
+    
+    </div>
+            </div> */}
+
+            <div className="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-1">
+              {divisions.length > 0 && (
+                <Select
+                  options={divisions}
+                  labelField="label"
+                  dropdownPosition={searchResults.length ? "top" : "bottom"} // Set menuPlacement to "top"
+                  placeholder="Multiple Division MCD"
+                  menuContainerStyle={{ width: '330px', height: '600px' /* set your desired width here */, fontSize: '18px' /* set your desired font size here */ }}
+                  optionStyle={{ fontSize: '16px', fontWeight: "600", width: '330px', color: "black", alignItems: "left", textAlign: "left"/* set your desired font size here */ /* set your desired width here */ }}
+                  dropdownHeight="300px"
+                  //  style={{ fontSize: '16px', textAlign:"left",width:"300px" }}
+                  searchable={true}
+                  multi={true}
+                  valueField="value"
+                  onChange={setSelectedDivision}
+                />
+              )}
+            </div>
+
             <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
               <input type="textarea"
                 name="textValue"
@@ -1571,6 +1932,7 @@ function SealingManual() {
               />
             </div>
 
+
             <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
               <input type="textarea"
                 name="textValue"
@@ -1581,7 +1943,6 @@ function SealingManual() {
                 style={{ border: "1px solid #9a9da1" }}
               />
             </div>
-
             <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
               <input type="textarea"
                 name="textValue"
@@ -1592,8 +1953,7 @@ function SealingManual() {
                 style={{ border: "1px solid #9a9da1" }}
               />
             </div>
-
-            <div className="col-xl-4 col-lg-5 col-md-6 col-sm-12 mb-1">
+            <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
               {/* <Button
               variant="contained"
               color="primary"
@@ -1609,15 +1969,12 @@ function SealingManual() {
               >
                 Start MCD Search
               </Button>
-
             </div>
-
-
           </div>
           <hr style={{ width: "85%", margin: "10px auto", borderColor: "black", borderBottom: "1px solid black" }} />
         </div>
 
-        }
+        )}
 
 
 
@@ -1669,7 +2026,7 @@ function SealingManual() {
 
             }
 
-            {true > 0 && (<Button
+            {!isDuesSearchComplete_1 && (<Button
               variant="contained"
               color="warning"
               onClick={(e) => openModal()}
@@ -1777,62 +2134,64 @@ function SealingManual() {
               onClick={(e) => goBack()}
               style={{ marginLeft: "10px" }}
             >
-              Back to auto search
+              Back to Home
             </Button>
             )}
 
 
             <div className="form-group searchBorder" style={{ display: "inline-block" }}>
-              {!freeze && <div class="d-flex justify-content-center mr-3" style={{ marginLeft: "5px" }}>
+              {!isDuesSearchComplete_1 && (<div className="form-group searchBorder" style={{ display: "inline-block" }}>
 
-                <div>
-                  {/* <label>Search Query</label> */}
+                <div class="d-flex justify-content-center mr-3" style={{ marginLeft: "5px" }}>
 
-                  <input
-                    type="text"
-                    className="form-control mr-5"
-                    style={{ width: "100%" }}
-                    placeholder="Refine Search"
-                    value={searchQuery}
-                    onKeyPress={(e) => handleKeyPress(e)}
+                  <div>
+                    {/* <label>Search Query</label> */}
 
-                    onChange={handleSearchInputChange}
-                  />
+                    <input
+                      type="text"
+                      className="form-control mr-5"
+                      style={{ width: "100%" }}
+                      placeholder="Refine Search"
+                      value={searchQuery}
+                      onKeyPress={(e) => handleKeyPress(e)}
+
+                      onChange={handleSearchInputChange}
+                    />
+                  </div>
+
+                  <div className="ml-3" style={{ marginLeft: "0px" }}>
+
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      onClick={handleSearchClick}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Refine Seach
+                    </Button>
+
+                    {true && (<Button
+                      variant="contained"
+                      color="info"
+                      onClick={(e) => originalList()}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Original List
+                    </Button>
+
+                    )}
+
+                    {/* <button
+      type="button"
+      className="btn btn-primary"
+      onClick={handleSearchClick}
+    >
+      Search
+    </button> */}
+                  </div>
+
                 </div>
-
-                <div className="ml-3" style={{ marginLeft: "0px" }}>
-
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={handleSearchClick}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Refine Seach
-                  </Button>
-
-                  {true && (<Button
-                    variant="contained"
-                    color="info"
-                    onClick={(e) => originalList()}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Original List
-                  </Button>
-
-                  )}
-
-                  {/* <button
-    type="button"
-    className="btn btn-primary"
-    onClick={handleSearchClick}
-  >
-    Search
-  </button> */}
-                </div>
-
-              </div>
-              }
+              </div>)}
 
             </div>
 
@@ -1847,16 +2206,7 @@ function SealingManual() {
 
 
       <div style={{ marginTop: "-32px" }}>
-        {/* <ReactPaginate
-                  pageCount={Math.ceil(searchResultsOther.length / itemsPerPage)}
-                  pageRangeDisplayed={3}
-                  marginPagesDisplayed={1}
-                  onPageChange={handlePageClick}
-                  containerClassName="pagination"
-        activeClassName="active"
-        previousLabel={<i className="previous" />}
-        nextLabel={<i className="next" />}
-                /> */}
+
       </div>
 
     </div>

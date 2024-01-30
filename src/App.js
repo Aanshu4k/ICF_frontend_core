@@ -7,19 +7,27 @@ import SearchOutput from './components/SearchOutput';
 import LoginForm from './components/login/login';
 import SealingRequestTable from './components/sealingSearch';
 import SealingManual from './components/SealingManual';
+import { color, colorChannel } from '@mui/system';
 
 function App() {
   const [userIsLoggedIn, setUserIsLoggedIn] = useState(false); // Placeholder for user authentication
+  const [name, setname] = useState('test'); // Placeholder for user authentication
+
   const pathname = window.location.pathname;
   const goToHome = () => {
-    window.location.href = "/auto";
+    window.location.href = "/auto"
   }
+
+
   const logOut = () => {
     localStorage.clear();
     window.location.href = "/login"
   }
 
+
+
   //  alert(pathname,"pathname")
+
   useEffect(() => {
     const isUserLoggedIn = localStorage.getItem('userIsLoggedIn');
     if (isUserLoggedIn === 'true') {
@@ -27,21 +35,24 @@ function App() {
     }
   }, []);
   function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
-
+  
   // Example usage
-
+ 
   // console.log('Generated UUID:', uuid);
+
   useEffect(() => {
     const systemId = sessionStorage.getItem('systemId');
+    const name = localStorage.getItem('#name');
+     setname(name)
     if (!systemId) {
       const uuid = generateUUID();
-      sessionStorage.setItem("systemId", uuid);
+      sessionStorage.setItem("systemId",uuid)
     }
   }, []);
 
@@ -50,14 +61,16 @@ function App() {
       <CssBaseline classes={{ '@global': { body: { paddingLeft: '0px !important' } } }} />
 
       {/* <Container maxWidth="2000px"> */}
-      {localStorage.getItem('userIsLoggedIn') && (< Paper
+      {localStorage.getItem('userIsLoggedIn') && (
+        <div>
+  < Paper
         className='d-flex align-items-center justify-content-between'
         style={{
-          position: "sticky", top: "0px",
+          position:"sticky", top:"0px",
           width: "100% !important", // Set the width to 100%
           padding: " 5px 40px",
-          backgroundColor: "#e7e7e7",
-          zIndex: "99999",
+          backgroundColor:"#e7e7e7",
+          zIndex:"99999",
           backgroundImage: "linear-gradient(-90deg, #fff, #eee)", // Light gray background color
           // boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Adding a shadow
         }}
@@ -79,25 +92,42 @@ function App() {
 
         </div>
 
-        <div style={{ color: "#0000009e", textTransform: "UpperCase", textDecoration: "underline" }}>
-          <h3 style={{ fontWeight: "700" }}>
+        <div style={{color:"#0000009e", textTransform:"UpperCase", textDecoration:"underline" }}>
+          <h3 style={{ fontWeight:"700"}}>
             Intelligent CF
           </h3>
         </div>
 
-        <div onClick={logOut} className='d-flex align-items-center' style={{ marginRight: "10px", cursor: 'pointer' }}>
-          <a className="sign-out pull-right"
-            style={{
+        <div  className=' align-items-center mt-2 mb-2' style={{ marginRight: "10px", cursor: 'pointer',display:'block', textAlign:'center',  }}>
+      
+       
+                  {/* <hr style={{width:"4px", height:"38px", color:"#000", marginRight:"12px" }}/> */}
+          <a
+onClick={logOut}
+            className="sign-out pull-right"
+            style={{fontSize:"24px",
               color: "white",
               textDecoration: "none",
               borderBottom: "1px solid white",
             }}
           >
+
             <i style={{ color: "red" }} className="fa fa-sign-out"></i>{" "}
             <span style={{ fontSize: "bold", color: "red" }}>Sign Out</span>
-          </a>
+          </a><br/>
+          <span className='welcome'>
+        
+        Welcome, {name}
+          
+                  </span>
+         
         </div>
-      </Paper>)}
+      </Paper>
+    
+                </div>
+    
+      
+      )}
 
 
       <Routes>
@@ -114,7 +144,11 @@ function App() {
         <Route path="/icf" element={true ? <AutoSearch /> : <Navigate to="/login" />} />
         <Route path="/manual" element={true ? <ManualSearch /> : <Navigate to="/login" />} />
         <Route path="/sealing" element={true ? <SealingRequestTable /> : <Navigate to="/login" />} />
+
         <Route path="/sealingManual" element={true ? <SealingManual /> : <Navigate to="/login" />} />
+
+
+        
         <Route path="/output" element={true ? <SearchOutput /> : <Navigate to="/login" />} />
         <Route path="/*" element={<Navigate to="icf" />} />
 

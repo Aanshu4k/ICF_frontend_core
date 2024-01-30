@@ -10,7 +10,7 @@ function LoginForm({ setUserIsLoggedIn }) {
 
  let is_login = localStorage.getItem("isLoggedIn");
 
- if(is_login && is_login==='true'){
+ if(is_login && is_login=='true'){
   setUserIsLoggedIn(true)
   navigate('/auto');
  }else{

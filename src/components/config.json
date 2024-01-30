@@ -1,6 +1,6 @@
 {
-    "API_url_DEV":"http://10.125.126.72:7000",
+    "API_url_DEV":"https://icf1.bsesbrpl.co.in",
     "API_url_DEV1":"http://10.125.126.72:5000",
-    "API_url":"http://127.0.0.1:5001",
-    "api_url":"http://127.0.0.1:5001"
+    "API_url":"https://icf1.bsesbrpl.co.in",
+    "api_url":"https://icf1.bsesbrpl.co.in"
 }

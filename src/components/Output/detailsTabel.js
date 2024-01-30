@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactPaginate from 'react-paginate';
 
-function UserDetailsTable({ user, page }) {
+function UserDetailsTable({ user,page }) {
   // localStorage.removeItem('selectedRows_1')
-  console.log(user, "useruseruseruseruseruseruseruser");
+  console.log(user,"useruseruseruseruseruseruseruser");
 
   const [currentPage, setCurrentPage] = useState(page);
   const itemsPerPage = 10; // Change this to the number of items you want to display per page.
@@ -30,8 +30,8 @@ function UserDetailsTable({ user, page }) {
   const [selectAllChecked, setselectAllChecked] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
 
-
-  let selectedRows_1 = [];
+  
+  let selectedRows_1 =[];
   // Load selected rows from local storage on component mount
   // Load selected rows from local storage on component mount
   useEffect(() => {
@@ -40,7 +40,7 @@ function UserDetailsTable({ user, page }) {
   }, []);
 
   const handleRowClick = (row, e) => {
-    console.log(row, "isgdcuizixcn")
+    console.log(row,"isgdcuizixcn")
     const newSelectedRows = [...selectedRows];
     if (e.target.checked) {
       newSelectedRows.push(row);
@@ -51,7 +51,7 @@ function UserDetailsTable({ user, page }) {
       }
     }
 
-    console.log(newSelectedRows, "newSelectedRowsnewSelectedRows")
+    console.log(newSelectedRows,"newSelectedRowsnewSelectedRows")
 
     setSelectedRows(newSelectedRows);
 
@@ -82,13 +82,13 @@ function UserDetailsTable({ user, page }) {
   //    localStorage.setItem('selectedRows_1',JSON.stringify(selectedRows_1));
   // };
 
-
+  
   function formatDateToDDMMYYYY(dateString) {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
     const year = date.getFullYear();
-
+  
     return `${day}-${month}-${year}`;
   }
 
@@ -108,76 +108,76 @@ function UserDetailsTable({ user, page }) {
     }
     localStorage.setItem("selectedRows_1", JSON.stringify(selectedRows_1));
   };
+  
 
 
+  
+  useEffect(() => {camelCase()},[])
 
 
-  useEffect(() => { camelCase() }, [])
+const camelCase = ()=>{
+  // Get all the <th> elements in the table
+const thElements = document.querySelectorAll('th');
+
+thElements.forEach(th => {
+  // Get the current text content
+  const text = th.textContent.trim();
+
+  // Split the text into words
+  const words = text.split(' ');
+
+  // Capitalize the first letter of each word and join them back with spaces
+  const capitalizedText = words.map(word => (
+    word.charAt(0).toUpperCase() + word.slice(1)
+  )).join(' ');
+  console.log(capitalizedText,"capitalizedTextcapitalizedTextcapitalizedText")
+
+  // Set the <th> element's text content to the capitalized text
+  th.textContent = capitalizedText;
+});
 
 
-  const camelCase = () => {
-    // Get all the <th> elements in the table
-    const thElements = document.querySelectorAll('th');
-
-    thElements.forEach(th => {
-      // Get the current text content
-      const text = th.textContent.trim();
-
-      // Split the text into words
-      const words = text.split(' ');
-
-      // Capitalize the first letter of each word and join them back with spaces
-      const capitalizedText = words.map(word => (
-        word.charAt(0).toUpperCase() + word.slice(1)
-      )).join(' ');
-      console.log(capitalizedText, "capitalizedTextcapitalizedTextcapitalizedText")
-
-      // Set the <th> element's text content to the capitalized text
-      th.textContent = capitalizedText;
-    });
-
-
-  }
-  // Function to check if a row is selected
-  const isRowSelected = (row) => {
-    const page = currentPage;
-    return selectedRows[page] && selectedRows[page].some((selectedRow) => selectedRow.id === row.id);
-  };
+}
+// Function to check if a row is selected
+const isRowSelected = (row) => {
+  const page = currentPage;
+  return selectedRows[page] && selectedRows[page].some((selectedRow) => selectedRow.id === row.id);
+};
 
   return (
     <div class="table-card" >
+         
 
+    <div class="mt-1 table1" style={{marginLeft:"16px", overflowY: 'scroll', maxHeight: '420px', height: 'auto', overflow: 'auto',width:'1595px' }}>     
 
-      <div class="mt-1 table1" style={{ marginLeft: "16px", overflowY: 'scroll', maxHeight: '420px', height: 'auto', overflow: 'auto', width: '1595px' }}>
-
-        <table class="mt-3 bordered bordered1">
-          <thead className="mt-3 bg-light inner-t" >
-            <tr>
-              {/* <th style={{ whiteSpace:'nowrap' }}>
+     <table class="mt-3 bordered bordered1">
+        <thead className="mt-3 bg-light inner-t" >
+        <tr>   
+          {/* <th style={{ whiteSpace:'nowrap' }}>
             <input onChange={(e) => handleRowClick_1(e)}  type="checkbox" name="" />
           </th> */}
-              {/* <th style={{ whiteSpace:'nowrap' }} >SEARCH MODE</th> */}
-              {/* <th  style={{ whiteSpace:'nowrap' }}>DUES</th> */}
-              <th style={{ whiteSpace: 'nowrap' }}>BP TYPE</th>
+          {/* <th style={{ whiteSpace:'nowrap' }} >SEARCH MODE</th> */}
+          {/* <th  style={{ whiteSpace:'nowrap' }}>DUES</th> */}
+          <th  style={{ whiteSpace:'nowrap' }}>BP TYPE</th>
 
-              <th style={{ whiteSpace: 'nowrap', minWidth: "150px" }}>MOVE OUT</th>
-              <th style={{ whiteSpace: 'nowrap' }}>CST STS</th>
-              {/* <th style={{ whiteSpace:'nowrap' }}>SUB DIVISION</th> */}
-              <th style={{ whiteSpace: 'nowrap' }}>CA</th>
-              <th style={{ whiteSpace: 'nowrap' }}>NAME</th>
-              <th style={{ whiteSpace: 'nowrap' }}>SAP ADDRESS</th>
-              <th style={{ whiteSpace: 'nowrap' }}>DEVICE NO</th>
-              <th style={{ whiteSpace: 'nowrap' }}>ACCT CLS</th>
-              <th style={{ whiteSpace: 'nowrap' }}>TARIFF</th>
-
-              <th style={{ whiteSpace: 'nowrap' }}>SAP POLE ID</th>
-              {/* <th  style={{ whiteSpace:'nowrap' }}>DIVISION</th> */}
-            </tr>
-          </thead>
-          <tbody>
-            {user.map((row) => (
-              <tr key={row.OUTPUT_SAP_DIVISION}>
-                {/* <td>
+          <th   style={{ whiteSpace:'nowrap',minWidth:"150px"}}>MOVE OUT</th>
+          <th  style={{ whiteSpace:'nowrap' }}>CST STS</th>
+          {/* <th style={{ whiteSpace:'nowrap' }}>SUB DIVISION</th> */}
+          <th  style={{ whiteSpace:'nowrap' }}>CA</th>
+          <th  style={{ whiteSpace:'nowrap' }}>NAME</th>
+          <th  style={{ whiteSpace:'nowrap'}}>SAP ADDRESS</th>
+          <th  style={{ whiteSpace:'nowrap' }}>DEVICE NO</th>
+          <th  style={{ whiteSpace:'nowrap' }}>ACCT CLS</th>
+          <th  style={{ whiteSpace:'nowrap' }}>TARIFF</th>
+       
+          <th  style={{ whiteSpace:'nowrap' }}>SAP POLE ID</th>
+          {/* <th  style={{ whiteSpace:'nowrap' }}>DIVISION</th> */}
+          </tr>
+        </thead>
+        <tbody>
+        {user.map((row) => (
+                  <tr key={row.OUTPUT_SAP_DIVISION}>
+                    {/* <td>
                       <input
                         className="check_box"
                         type="checkbox"
@@ -188,39 +188,39 @@ function UserDetailsTable({ user, page }) {
 
                       />
                     </td> */}
-                {/* <td  >{row.SEARCH_MODE}</td> */}
-                {/* <td>{row.DUES || '-'}</td> */}
-                <td>{row.BP_TYPE || '-'}</td>
-                <td style={{ minWidth: "150px" }}>{row.MOVE_OUT_DATE ? formatDateToDDMMYYYY(row.MOVE_OUT_DATE) : '-'}</td>
+                    {/* <td  >{row.SEARCH_MODE}</td> */}
+                    {/* <td>{row.DUES || '-'}</td> */}
+                    <td>{row.BP_TYPE||'-'}</td>
+                    <td style={{minWidth:"150px"}}>{row.MOVE_OUT_DATE ? formatDateToDDMMYYYY(row.MOVE_OUT_DATE): '-'}</td>
 
+                    
+{/* <td>{row.OUTPUT_FATHER_NAME}</td> */}
 
-                {/* <td>{row.OUTPUT_FATHER_NAME}</td> */}
+<td>{row.OUTPUT_CSTS_CD}</td>
+                    {/* <td>{row.OUTPUT_SAP_SUB_DIVISION || '-'}</td> */}
+                    <td>{row.OUTPUT_CONS_REF || '-'}</td>
+                    <td style={{textAlign:"left", whiteSpace:'nowrap', width: '500px' }}>{row.OUTPUT_SAP_NAME}</td>
+                    <td style={{ whiteSpace:'nowrap',textAlign:"left", width: '1000px' }}>{row.OUTPUT_SAP_ADDRESS}</td>
+                  
+                    <td>{row.DEVICE_NO || '-'}</td>
+                    <td>{row.OUTPUT_SAP_DEPARTMENT || '-'}</td>
+                 
+                    <td>{row.OUTPUT_TARIFF}</td>
+                  
 
-                <td>{row.OUTPUT_CSTS_CD}</td>
-                {/* <td>{row.OUTPUT_SAP_SUB_DIVISION || '-'}</td> */}
-                <td>{row.OUTPUT_CONS_REF || '-'}</td>
-                <td style={{ textAlign: "left", whiteSpace: 'nowrap', width: '500px' }}>{row.OUTPUT_SAP_NAME}</td>
-                <td style={{ whiteSpace: 'nowrap', textAlign: "left", width: '1000px' }}>{row.OUTPUT_SAP_ADDRESS}</td>
+                    {/* <td>{maskMobileNumber(row.OUTPUT_MOBILE_NO)}</td> */}
+                    <td>{row.OUTPUT_SAP_POLE_ID}</td>    
+                    {/* <td>{row.OUTPUT_SAP_DIVISION}</td>          */}
+                   
+                  </tr>
+                ))}
 
-                <td>{row.DEVICE_NO || '-'}</td>
-                <td>{row.OUTPUT_SAP_DEPARTMENT || '-'}</td>
+        </tbody>
+      </table>
 
-                <td>{row.OUTPUT_TARIFF}</td>
-
-
-                {/* <td>{maskMobileNumber(row.OUTPUT_MOBILE_NO)}</td> */}
-                <td>{row.OUTPUT_SAP_POLE_ID}</td>
-                {/* <td>{row.OUTPUT_SAP_DIVISION}</td>          */}
-
-              </tr>
-            ))}
-
-          </tbody>
-        </table>
-
-
-
-      </div>
+      
+      
+    </div>
 
 
     </div>
