@@ -257,7 +257,7 @@ function AutoSearch(navigation) {
                 // Update the case count
                 setCaseCount(rowsWithId.length);
                 console.log("Fetched cases data:", rowsWithId);
-                let filter = divisions.filter(x => x.VAPLZ == value);
+                let filter = divisions.filter(x => x.VAPLZ === value);
 
                 localStorage.setItem("selectedDivision", JSON.stringify(filter))
                 const requestPromise = fetch(`${url.API_url}/api/synonyms`, {

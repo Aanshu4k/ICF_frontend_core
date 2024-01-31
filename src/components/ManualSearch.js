@@ -149,7 +149,6 @@ function ManualSearch() {
 
   const fetchIpAddress = async () => {
     try {
-
       let aufnr_11 = localStorage.getItem('manual');
       if (aufnr_11) {
         aufnr_11 = JSON.parse(aufnr_11);
@@ -245,9 +244,10 @@ function ManualSearch() {
     if (aufnr_1.AUFNR !== aufnr_11.AUFNR) {
       setAufnr_1(aufnr_11);
       setCaseData(aufnr_11);
+
     }
   }
-
+  console.log("Case Data (aufnr_11) : ", aufnr_11);
   const [progressValue, setProgressValue] = useState(0);
   const [showProgressBar, setShowProgressBar] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -299,42 +299,7 @@ function ManualSearch() {
       });
     }, 100);
   };
-  // useEffect(() => {
-  //   let existingResult = localStorage.getItem("saveExistRes");
-  //   if (existingResult) {
-  //     existingResult = JSON.parse(existingResult);
-  //     existingResult = existingResult[`${aufnr_1.AUFNR}`];
-  //     if(existingResult){
-  //       existingResult=existingResult.map(x=>{
-  //         x.SEARCH_MODE ="AUTO-MODE";
-  //         return{
-  //           ...x
-  //         }
-  //       })
-  //       setSearchResults(existingResult)
-  //       setSearchResults1(existingResult)
-  //       setSearchResultsOther(existingResult);
-  //       let obj = getCounts(existingResult);
-  //       setCounts(obj)
-  //       let exist = existingResult.map(x => x.CONTRACT_ACCOUNT);
-  //       console.log(exist)
-  //       setExistingResult(exist)
-  //     }
-  //   }
 
-  //   let check = localStorage.getItem("sealingData");
-  //   if(check){
-  //     check = JSON.parse(check);
-  //     setselectedRows_1(check)
-  //   }
-  //   if (!aufnr) {
-  //     console.error("AUFNR parameter is missing.");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  // }, [aufnr]);
-  
   function capitalizeWord(word) {
     if (typeof word !== 'string' || word.length === 0) {
       return word;
@@ -796,9 +761,7 @@ function ManualSearch() {
       },
       body: JSON.stringify(obj),
     })
-    fetchIpAddress()
-    // sessionStorage.setItem("duesSearchComplete", "true");
-
+    fetchIpAddress();
     sessionStorage.removeItem("duesSearchComplete");
     checkBt();
     setselectedRows_1([]);
@@ -862,7 +825,6 @@ function ManualSearch() {
       set_is_first(true);
     }
     console.log("adsx", searchResults.length);
-    // searchResults = searchResults.filter(x=>x.BP_TYPE=='Normal')
     let result = await refineSearch("", searchResults, searchQuery);
     setSearchQuery("");
     let obj = getCounts(result);
@@ -871,8 +833,6 @@ function ManualSearch() {
 
     setSearchResults(result);
     setSearchResults1(result);
-
-    //  setCurrentSearchResults(result);
     handlePageClick({ selected: 0 }, result)
 
     if (searchQuery.trim() === "") {
@@ -936,57 +896,6 @@ function ManualSearch() {
         });
       }
     });
-
-
-    // fetch(`${url.API_url}/api/calculate_dues`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ caNumbers }),
-    // })
-    // .then((response) => response.json())
-    // .then((data) => {
-    //   // localStorage.removeItem('selectedRows_1');
-    //   // Update the DUES values in the global state
-    //   console.log(data.duesData, " data.duesData data.duesData data.duesData")
-    //   // dispatch({ type: "UPDATE_DUES", payload: data.duesData });
-    //   if (data.duesData) {
-    //     data.duesData = [data.duesData]
-    //   }
-    //   // Update the DUES values in the searchResultsData state
-    //   arr.forEach(x => {
-    //     let dues = data.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
-    //     if (dues && dues.length) {
-    //       x.DUES = dues[0].AMOUNT
-    //     }
-    //     x.disabled = true
-    //   });
-
-    //   setSearchResults(arr)
-    //   setSearchResults1(arr)
-    //   setSearchResultsOther(arr);
-    //   let obj = getCounts(arr);
-    //   setCounts(obj);
-    //   fetch(`${url.API_url}/api/sendToDsk`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ data: arr, addr: aufnr_1 }),
-    //   })
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       navigate('/auto')
-
-    //     })
-    // })
-    // .catch((error) => {
-    //   setCalculateDuesDisabled(false);
-
-    //   console.error("Error calculating dues:", error);
-    // });
-
   };
 
   // Function to handle manual search button click
@@ -1157,7 +1066,7 @@ function ManualSearch() {
     } else {
       console.log("2");
       // Remove the unselected row from the state
-      setselectedRows_1((prevSelectedRows) => prevSelectedRows.filter((selectedRow) => selectedRow.id != row.id));
+      setselectedRows_1((prevSelectedRows) => prevSelectedRows.filter((selectedRow) => selectedRow.id !== row.id));
     }
     console.log(selectedRows_1, ";;l;l;l;")
   };
@@ -1319,8 +1228,6 @@ function ManualSearch() {
                 <th style={{ width: "15%" }}>NAME</th>
                 <th>REQUEST ADDRESS</th>
                 <th style={{ width: "10%" }}>REQUEST TYPE</th>
-                {/* <th style={{ width: "10%" }}>ACTION</th> */}
-
               </tr>
               <tr>
                 <td>{aufnr_1.AUFNR}</td>
@@ -1353,18 +1260,6 @@ function ManualSearch() {
                         />
                         <span style={{ fontStyle: "bold", fontWeight: 600, fontSize: `18px` }} className="form-check-label" htmlFor="all">All</span>
                       </div>
-                      {/* <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="duesFilter"
-              id="zero"
-              value="zero"
-              checked={duesFilter === "zero"}
-              onChange={handleDuesFilterChange}
-            />
-            <span style={{fontStyle:"bold",fontWeight:600,fontSize:`18px`}}  className="form-check-label" htmlFor="zero">{"Dues < 500"}</span>
-          </div> */}
                       <div className="form-check form-check-inline">
                         <input
                           className="form-check-input"
@@ -1381,23 +1276,6 @@ function ManualSearch() {
                   </div>
 
                   <h5 style={{ color: 'darkslategray', cursor: 'pointer' }}>
-                    {/* <div class="container"> */}
-                    {/* <div class="pane mb-1 mt-1">
-        <label class="label">
-            <span>All</span>
-            <input id="left" class="input" name="radio" type="radio"/>
-        </label>
-        <label class="label">
-            <span>DUES</span>
-            <input id="middle" class="input" checked="checked" name="radio" type="radio"/>
-        </label>
-        <label class="label">
-            <span>{"> 500"}</span>
-            <input id="right" class="input" name="radio" type="radio"/>
-        </label>
-        <span class="selection"></span>
-    </div> */}
-                    {/* </div> */}
                     <span className="span5" style={{ color: 'black', fontWeight: "700" }}>
                       <span style={{ float: "left", cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                         <span onClick={() => handleFilterByBPType('Sealing')} >Selected Result: </span> {selectedRows_1.length}
@@ -1416,18 +1294,13 @@ function ManualSearch() {
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700" }} className="span2">
                       <span onClick={() => handleFilterByBPType('LEGAL')}>Legal:</span> {(counts.legal || 0)}
                     </span>
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span1">
-                    <span onClick={() => handleFilterByBPType('Sealing')} >MCD:</span> {(counts.mcd || 0)}
-                  </span> */}
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700" }} className="span1">
                       <span onClick={() => handleFilterByBPType('other')} >Other:</span> {(counts.other || 0)}
                     </span>
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700" }} className="span1">
                       <span onClick={() => handleFilterByBPType('move')} >Move Out Cases:</span> {(counts.move || 0)}
                     </span>
-
                     <span style={{ marginRight: "60px", color: "green", float: "right" }}>  {!isDuesSearchComplete_1 ? "" : "Sent To DSK"}
-
                       {isDuesSearchComplete_1 && (<i className="fa fa-check" style={{ color: 'green', fontSize: '20px' }} />)}
                     </span>
                   </h5>
@@ -1459,7 +1332,7 @@ function ManualSearch() {
                         </thead>
                         {searchResults.map((result, index) => {
                           const isResultInExisting = existingResult.some(
-                            (existingRow) => existingRow == result.CONS_REF
+                            (existingRow) => existingRow === result.CONS_REF
                           );
                           function formatDateToDDMMYYYY(dateString) {
                             const date = new Date(dateString);
@@ -1688,14 +1561,6 @@ function ManualSearch() {
                       Original List
                     </Button>
                     )}
-
-                    {/* <button
-      type="button"
-      className="btn btn-primary"
-      onClick={handleSearchClick}
-    >
-      Search
-    </button> */}
                   </div>
                 </div>
               </div>)}
@@ -1703,16 +1568,6 @@ function ManualSearch() {
           </Grid>
         </div>
         <div style={{ marginTop: "-32px" }}>
-          {/* <ReactPaginate
-                  pageCount={Math.ceil(searchResultsOther.length / itemsPerPage)}
-                  pageRangeDisplayed={3}
-                  marginPagesDisplayed={1}
-                  onPageChange={handlePageClick}
-                  containerClassName="pagination"
-        activeClassName="active"
-        previousLabel={<i className="previous" />}
-        nextLabel={<i className="next" />}
-                /> */}
         </div>
       </div>
     </>

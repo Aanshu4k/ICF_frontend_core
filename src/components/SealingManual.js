@@ -38,12 +38,8 @@ function SealingManual() {
 
   const [prev_C, set_prev_c] = useState(0);
 
-
-
   const itemsPerPage = 100;
 
-
-  // let  =[];
   let [selectedRows_1, setselectedRows_1] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -54,7 +50,6 @@ function SealingManual() {
   const [searchResults1, setSearchResults1] = useState([]); // New state for search results;
   const [searchResults2, setSearchResults2] = useState([]); // New state for search results;
   const [is_first, set_is_first] = useState(false); // New state for search results
-
   const [searchResultsOther, setSearchResultsOther] = useState([]); // New state for search results
 
   // State for pagination
@@ -98,7 +93,7 @@ function SealingManual() {
     const endIndex = startIndex + itemsPerPage;
     console.log(searchResultsOther, "qqqqqqqqqqq")
 
-    let items = page == 0 ? data.slice(startIndex, endIndex) : searchResultsOther.slice(startIndex, endIndex);
+    let items = page === 0 ? data.slice(startIndex, endIndex) : searchResultsOther.slice(startIndex, endIndex);
     console.log(items.length, "searchResultsOther")
 
     setSearchResults(items)
@@ -129,7 +124,6 @@ function SealingManual() {
     fetchDivisions();
   }, []);
 
-
   // Function to handle forward and next pagination controls
   const getCounts = (data) => {
     if (!data) return {
@@ -141,11 +135,11 @@ function SealingManual() {
     }
     let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
     return {
-      normal: data.filter(x => x.BP_TYPE == 'Normal').length,
+      normal: data.filter(x => x.BP_TYPE === 'Normal').length,
       total: data.length,
-      enforcement: data.filter(x => x.BP_TYPE == 'ENFORCEMENT').length,
-      legal: data.filter(x => x.BP_TYPE == 'LEGAL').length,
-      mcd: data.filter(x => x.BP_TYPE == 'Sealing').length,
+      enforcement: data.filter(x => x.BP_TYPE === 'ENFORCEMENT').length,
+      legal: data.filter(x => x.BP_TYPE === 'LEGAL').length,
+      mcd: data.filter(x => x.BP_TYPE === 'Sealing').length,
       other: data.filter(x => !bps.includes(x.BP_TYPE)).length
     }
   };
@@ -153,15 +147,11 @@ function SealingManual() {
   let aufnr_11 = localStorage.getItem('manual');
   if (aufnr_11) {
     aufnr_11 = JSON.parse(aufnr_11);
-    // console.log(aufnr_11,"aufnr_11");
-    if (aufnr_1.AUFNR != aufnr_11.AUFNR) {
+    if (aufnr_1.AUFNR !== aufnr_11.AUFNR) {
       setAufnr_1(aufnr_11);
       setCaseData(aufnr_11);
-
     }
-
   }
-
   const [progressValue, setProgressValue] = useState(0);
   const [showProgressBar, setShowProgressBar] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -176,7 +166,6 @@ function SealingManual() {
     })
       .then((response) => response.json())
       .then(async (data) => {
-
       })
   }
 
@@ -193,16 +182,11 @@ function SealingManual() {
         if (val && prevValue == 98) {
           return prevValue;
         }
-
         if (!val) {
-
           clearInterval(interval);
           setProgressValue(100);
-
           return 100;
-
         }
-
         if (prevValue < 100) {
           return prevValue + 1;
         }
@@ -213,9 +197,6 @@ function SealingManual() {
       });
     }, 100);
   };
-  // useEffect(() => {
-
-  // }, [aufnr]);
   function capitalizeWord(word) {
     if (typeof word !== 'string' || word.length === 0) {
       return word;
@@ -228,14 +209,11 @@ function SealingManual() {
   const result_threshold = 100;
 
   // Define a function to split words separated by special characters
-
   let exclude_terms = ["khasra", "kh", "tagore", "first", "second", "third", "fourth", "top", "basement",
     "floor", "first floor", "ground floor", "second floor", "third floor", "front", "back", "side",
     "ff", "sf", "tf", "gf", "g/f", "f/f", "s/f", "t/f", "no", "number", "fourth floor", "gali", "juggi", "khanpur", "janak",
     "uttam", "alaknanda", "nehru"
   ]
-
-
   function cleanAndUppercaseString(inputString) {
     // Remove special characters and spaces
     const cleanedString = inputString.replace(/[^\w\s]/g, '');
@@ -248,18 +226,10 @@ function SealingManual() {
   function mergeWordsAndRemoveSpaces(inputString) {
     // Split the input string by spaces
     const words = inputString.split(' ');
-
     // Remove spaces and merge all words together
     const mergedString = words.join('');
-
     return mergedString;
   }
-
-
-
-
-
-
 
   const addCommaAfterSpace = (inputString) => {
     // Split the input string into an array of words
@@ -270,7 +240,6 @@ function SealingManual() {
 
     return resultString;
   }
-
 
   function containsNumber(str) {
     return /\d/.test(str);
@@ -284,7 +253,6 @@ function SealingManual() {
         let sap_address = address;
         sap_address = addCommaAfterSpace(sap_address);
 
-        // console.log(stringWithCommas);
         // Step 2: Remove exclude terms from SAP_ADDRESS
         let filteredSapAddress = sap_address;
 
@@ -302,8 +270,6 @@ function SealingManual() {
         const searchWords = filteredSapAddress.split(' ');
 
         // Initialize a list to keep track of filtered results
-
-        // Initialize a list to keep track of filtered results
         let filteredResults = [];
 
         // Step 4: Find the word with the longest length
@@ -315,16 +281,12 @@ function SealingManual() {
         lastLongestWord = lastLongestWord.filter(x => !x.includes("SEC"))
         // Remove the longest word and last longest word from the searchWords array
         searchWords.splice(searchWords.indexOf(longestWord), 1);
-        // if (lastLongestWord) {
-        //   searchWords.splice(searchWords.indexOf(lastLongestWord), 1);
-        // }
 
         // Find the second longest word among the remaining words
         let secondLongestWord = searchWords.reduce((prev, current) =>
           current.length > prev.length ? current : prev,
           ''
         );
-
         // Remove the second longest word from the searchWords array
         searchWords.splice(searchWords.indexOf(secondLongestWord), 1);
 
@@ -352,49 +314,26 @@ function SealingManual() {
           ''
         );
         let finalStr = '';
-
-
         if (containsNumber(longestWord)) {
           finalStr = longestWord;
         }
-
         if (containsNumber(lastLongestWord)) {
           finalStr = lastLongestWord;
         }
-        // if(containsNumber(secondLongestWord)){
-        //   finalStr=secondLongestWord;
-        // }
-        // if(!finalStr && containsNumber(thirdLongestWord)){
-        //   finalStr=thirdLongestWord;
-        // }
-
-        // if(!finalStr && containsNumber(fourLongestWord)){
-        //   finalStr=fourLongestWord;
-        // }
-
-        // if(!finalStr && containsNumber(fiveLongestWord)){
-        //   finalStr=fiveLongestWord;
-        // }
 
         console.log(finalStr, "finalStrfinalStrfinalStrfinalStr")
-
         console.log(lastLongestWord, secondLongestWord, thirdLongestWord, fourLongestWord, fiveLongestWord);
-
-
 
         let round_1__array = lastLongestWord ? lastLongestWord : [];
         let round_2_array = lastLongestWord ? lastLongestWord : [];
         let round_3__array = secondLongestWord ? lastLongestWord : [];
-
         let round_4_words_array = ["PLT", "HNO", "PKT", "BLK", "BLOCK", "CLONY", "COLONY",
           "HOUSE", "PLOT", "SECTOR", "KHASRA", "GALI", "STREET", "JHUGGI", "POCKET", "KHOLI", "SHOP"
         ]
         try {
           let resultsData = data;
           resultsData = resultsData;
-
           filteredResults = resultsData;
-          // }
           // Continue with dynamic filtering in multiple rounds
           let roundCounter = 0;
           let currentWordsArray = [];
@@ -402,17 +341,13 @@ function SealingManual() {
             roundCounter++;
             console.log(lastLongestWord, "roundCounterroundCounter")
             // Find the words array for the current round
-
             if (roundCounter === 1) {
               currentWordsArray = lastLongestWord;
             } else if (roundCounter === 2) {
               currentWordsArray = lastLongestWord;
-              //   } else if (roundCounter === 3) {
-              //     currentWordsArray = round_3__array;
             } else if (roundCounter === 3) {
               currentWordsArray = [];
             }
-
 
             console.log(currentWordsArray, "currentWordsArraycurrentWordsArray")
             // Initialize a list to store filtered results for the current word
@@ -427,9 +362,7 @@ function SealingManual() {
               } else if (typeof combinedAddresses === 'string') {
                 combinedAddressString = combinedAddresses;
               }
-
               currentWordsArray = currentWordsArray.filter(value => !exclude_terms.includes(('' + value).toLowerCase()));
-
 
               const includesWord = currentWordsArray.some(word => combinedAddressString.includes(('' + word).replace(/[^\w\s]/g, '')));
 
@@ -440,43 +373,31 @@ function SealingManual() {
             // Update filteredResults with the results for the current word
             filteredResults = currentWordFilteredResults;
           }
-
-
           res(filteredResults)
           console.log(`Filtered Results after round ${roundCounter}:`, filteredResults.length);
           // Insert the filtered results into the AUTOCF_OUTPUT_MASTER table
         } catch (error) {
           console.log(error);
-          // handleButtonClick(0);
-
           res([])
-
           // Handle errors
         }
       } catch (error) {
-        // handleButtonClick(0);
-
         console.log(error)
-
         res([])
-
         // Handle errors
       }
     })
 
   };
-  const [menuPlacement, setMenuPlacement] = useState('bottom'); // State to control menu placement
-
+  const [menuPlacement, setMenuPlacement] = useState('bottom'); // State to control menu placemen
   // Function to dynamically set menu placement based on available space
   const handleMenuPlacement = () => {
     const inputElement = document.getElementById('division-select'); // Assuming the input id is 'division-select'
-
     if (inputElement) {
       const inputRect = inputElement.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const spaceBelow = windowHeight - inputRect.bottom;
       const spaceAbove = inputRect.top;
-
       // Set menuPlacement based on available space
       setMenuPlacement(spaceBelow < 300 && spaceAbove > spaceBelow ? 'top' : 'bottom');
     }
@@ -496,12 +417,9 @@ function SealingManual() {
 
     let manual = selectedRows_1.filter(x => !x.SEARCH_MODE).length;
 
-
-
     let satisfactionAuto = null; // Use null to represent no selection
     let satisfactionManual = null; // Use null to represent no selection
     if (duesData_ && duesData_.duesData.length) {
-
       Swal.fire({
         title: 'Are you satisfied with the results?',
         html: `
@@ -524,9 +442,6 @@ function SealingManual() {
           <input type="radio" name="satisfactionManual" value="no" ${satisfactionManual === false ? 'checked' : ''}> No
         </span>
       </div>
-
-
-      
     `,
         preConfirm: () => {
           satisfactionAuto = document.querySelector('input[name="satisfactionAuto"]:checked')?.value;
@@ -546,7 +461,6 @@ function SealingManual() {
         if (result.isConfirmed) {
           if (selectedRows_1) {
             let tt = null
-
             let systemId = sessionStorage.getItem("systemId");
             let obj = {
               systemId,
@@ -563,7 +477,6 @@ function SealingManual() {
               },
               body: JSON.stringify(obj),
             })
-
 
             if (duesData_ && duesData_.duesData.length) {
               tt = "w"
@@ -593,7 +506,6 @@ function SealingManual() {
               })
               exportToExcel(arr, aufnr_1)
             }
-
             sessionStorage.setItem("duesSearchComplete", "true");
             checkBt();
             localStorage.setItem("sealing_set#", JSON.stringify(selectedRows_1));
@@ -613,13 +525,10 @@ function SealingManual() {
               confirmButtonColor: '#3085d6',
             });
           }
-
-
-
         }
       });
-
-    } else {
+    }
+    else {
       if (selectedRows_1) {
         let tt = null;
         Swal.fire({
@@ -636,7 +545,6 @@ function SealingManual() {
         .move-out-label { color: purple; }
         .legal-label { color: red; }
       </style>
-      
       <div>
       <h5>Do you want to complete the dues search?</h5>
       <p><span id="enforcementLabel" class="enforcement-label">Auto-Mode Selected</span> - <span id="enforcementCount" class="enforcement">${auto}</span></p>
@@ -713,13 +621,8 @@ function SealingManual() {
             });
           }
         });
-
       }
     }
-
-
-
-
   };
 
   const handleCalculateDues1 = (index, user) => {
@@ -758,8 +661,6 @@ function SealingManual() {
             navigate('/auto')
 
           })
-
-
         // Show success message
         Swal.fire({
           title: 'Success!',
@@ -768,64 +669,12 @@ function SealingManual() {
         });
       }
     });
-
-
-    // fetch(`${url.API_url}/api/calculate_dues`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ caNumbers }),
-    // })
-    // .then((response) => response.json())
-    // .then((data) => {
-    //   // localStorage.removeItem('selectedRows_1');
-    //   // Update the DUES values in the global state
-    //   console.log(data.duesData, " data.duesData data.duesData data.duesData")
-    //   // dispatch({ type: "UPDATE_DUES", payload: data.duesData });
-    //   if (data.duesData) {
-    //     data.duesData = [data.duesData]
-    //   }
-    //   // Update the DUES values in the searchResultsData state
-    //   arr.forEach(x => {
-    //     let dues = data.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
-    //     if (dues && dues.length) {
-    //       x.DUES = dues[0].AMOUNT
-    //     }
-    //     x.disabled = true
-    //   });
-
-    //   setSearchResults(arr)
-    //   setSearchResults1(arr)
-    //   setSearchResultsOther(arr);
-    //   let obj = getCounts(arr);
-    //   setCounts(obj);
-    //   fetch(`${url.API_url}/api/sendToDsk`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ data: arr, addr: aufnr_1 }),
-    //   })
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       navigate('/auto')
-
-    //     })
-    // })
-    // .catch((error) => {
-    //   setCalculateDuesDisabled(false);
-
-    //   console.error("Error calculating dues:", error);
-    // });
-
   };
 
 
 
   // Define the columns you want to export
   const columnsToExport = ["SEARCH_MODE", "CF_CATEGORY", "ACCOUNT_CLASS", "SOLR_DUES", "SAP_DUES", "MOVE_OUT", "CONTRACT_ACCOUNT", "CSTS_CD", "SAP_NAME", "SAP_ADDRESS", "SAP_POLE_ID", "TARIFF"];
-
 
   const exportToExcel = (data, user) => {
     if (!data.length) {
@@ -840,9 +689,6 @@ function SealingManual() {
       element['ACCOUNT_CLASS'] = element['SAP_DEPARTMENT'];
       element['SOLR_DUES'] = element['solr_dues'];
       element['SAP_DUES'] = element['DUES'];
-
-
-
     }
     // Create a new array containing only the selected columns
     const filteredData = data.map((item) => {
@@ -862,12 +708,8 @@ function SealingManual() {
     XLSX.writeFile(wb, `${user.AUFNR}.xlsx`);
   };
 
-
-
-
   const searchMatchingResultAlgoAgain = async (address, data, val) => {
-    //  console.log(data,"data");
-    //  return 
+
     return new Promise(async (res, rej) => {
       try {
         console.log("yyyyyyyyyyyyyyyyyy", address)
@@ -892,7 +734,6 @@ function SealingManual() {
           console.log(currentWord, word, "lll");
           if (currentWord && currentWord.length <= 2 && containsNumbers(word)) {
             currentWord = currentWord ? `${currentWord} ${word}` : word;
-
           } else {
             if (startsWithNumber && !endsWithNumber) {
               currentWord = currentWord ? `${currentWord} ${word}` : word;
@@ -902,13 +743,11 @@ function SealingManual() {
 
             }
           }
-
         }
 
         if (currentWord) {
           mergedWords.push(currentWord);
         }
-
         // let splitAndCleanedWords = mergedWords.map(word => word.replace(/\W/g, '').split(' ')).flat();
         let splitAndCleanedWords = mergedWords.flatMap(word => word.split(/\W+/).filter(Boolean));
         splitAndCleanedWords = splitAndCleanedWords.map(x => x.toUpperCase())
@@ -946,10 +785,7 @@ function SealingManual() {
         res(modifiedWords)
       } catch (error) {
         console.log(error)
-
         res([])
-
-        // Handle errors
       }
     })
 
@@ -1013,7 +849,6 @@ function SealingManual() {
               let rd = numericPart[0] === numericPart1[0];
               if (rd) {
                 console.log("kkjjj")
-                // is_exist =true;
                 return true;
               }
             }
@@ -1024,24 +859,12 @@ function SealingManual() {
 
         for (const doc of data) {
           let finalStr = await searchMatchingResultAlgoAgain(doc.SAP_ADDRESS, [], 1);
-
           if (matchesCriteria(finalStr, str.toUpperCase())) {
             currentWordFilteredResults.push(doc);
 
           }
         }
-
-
         console.log(currentWordFilteredResults, "kaml sharma")
-
-        // const uniqueArray = currentWordFilteredResults.filter((item, index, self) => {
-        //   return (
-        //     index ===
-        //     self.findIndex((t) => t.CONS_REF == item.CONS_REF)
-        //   );
-        // });
-        // let otherBptype = searchResultsOther.filter(x=>x.BP_TYPE!='Normal');
-        // currentWordFilteredResults.push(...otherBptype)
         res(currentWordFilteredResults);
 
       } catch (error) {
@@ -1071,9 +894,6 @@ function SealingManual() {
     uppercasedString = mergeWordsAndRemoveSpaces(uppercasedString)
     return uppercasedString;
   }
-
-
-
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState("");
@@ -1149,10 +969,8 @@ function SealingManual() {
 
     // Capitalize the cleaned string
     const capitalizedString = cleanedString.toUpperCase();
-
     return capitalizedString;
   }
-
 
   // Function to handle the "Search" button click in the modal
   const handleSearchClick = async () => {
@@ -1172,29 +990,19 @@ function SealingManual() {
 
     //  setCurrentSearchResults(result);
     handlePageClick({ selected: 0 }, result)
-
     if (searchQuery.trim() === "") {
       console.log("adsx")
-
       setSearchError("Search query cannot be empty");
-
     } else {
       // Clear any previous error message
       setSearchError("");
-
-      // Perform the search
-      // ...
-      // closeModal();
-
     }
     console.log(searchError)
 
   };
 
-
   // Function to handle manual search button click
   const handleManualSearchClick = () => {
-
     if (!addressPart1 && !addressPart2 && !addressPart3) {
       return
     }
@@ -1237,11 +1045,10 @@ function SealingManual() {
     let filterDivision = selectedDivision.map(x => x.value)
     addressPart3 = addressPart3.replace(/[^\w\s-]/g, '');
     let drop = localStorage.getItem("dropDataList")
-    if (drop && drop == 1) {
+    if (drop && drop === 1) {
       setIsDrop(1)
     } else {
       setIsDrop(0)
-
     }
     setExistingResult([])
     fetch(`${url.API_url}/api/manual_search_sealing`, {
@@ -1273,21 +1080,14 @@ function SealingManual() {
               finalres = existingResult1;
             }
           }
-
         };
         setSearchResults([]);
         setSearchResults1([]);
         setSearchResultsOther([])
-        // if(drop && drop==1){
         console.log(searchResults.length, "lll", data.data)
-        // data.data = data.data.filter(x => !existingResult.includes(x.CONTRACT_ACCOUNT))
-        // }
-        // console.log(data.data.length, "wwwwwwwwww", existingResult.length)
-        // let res = await searchMatchingResultAlgo("",resultsData,str);
         finalres.map(x => {
           x.SEARCH_MODE = "AUTO-MODE"
         })
-        // data.data.map()
         console.log(finalres, "finalres")
         data.data.push(...finalres);
         setSearchResults(data.data);
@@ -1304,9 +1104,7 @@ function SealingManual() {
         const minutes = Math.floor(timeElapsedInMilliseconds / 60000);
         const seconds = Math.floor((timeElapsedInMilliseconds % 60000) / 1000);
         const milliseconds = (timeElapsedInMilliseconds % 1000).toString().padStart(3, '0').slice(0, 2); // Truncate to two digits
-
         const formattedTime = `${minutes.toString().padStart(2, '0')} minutes, ${seconds.toString().padStart(2, '0')} seconds, ${milliseconds} milliseconds`;
-
 
         let objs = {
           "obj": {
@@ -1322,7 +1120,6 @@ function SealingManual() {
         setSearchLogs(objs)
         if (data.error) {
           console.error("Error fetching search results:", data.error);
-          // Handle error condition if needed
         } else {
           // Set the fetched search results in state
         }
@@ -1332,7 +1129,6 @@ function SealingManual() {
         console.error("Error fetching search results:", error);
         setShowLoading(false);
         handleButtonClick(0)
-
         // Handle error condition if needed
       });
   };
@@ -1361,8 +1157,6 @@ function SealingManual() {
     }
     console.log(selectedRows_1, ";;l;l;l;")
   };
-
-
 
   const handleRowClick_1 = (e) => {
     if (e.target.checked) {
@@ -1442,7 +1236,7 @@ function SealingManual() {
         if (!obj.hasOwnProperty(key)) {
           obj[key] = exampleEntry[key];
         }
-        if (key == 'REC_ENTRY_DATE') {
+        if (key === 'REC_ENTRY_DATE') {
           obj[key] = '';
         }
       }
@@ -1466,11 +1260,7 @@ function SealingManual() {
           // Handle error condition if needed
         } else {
           console.log("success")
-          // window.location.href= '/output'
           navigate('/output')
-
-          // Set the fetched search results in state
-          // setSearchResults(data.data);
         }
         setShowLoading(false);
       })
@@ -1479,38 +1269,14 @@ function SealingManual() {
         setShowLoading(false);
         // Handle error condition if needed
       });
-
-    // localStorage.setItem('maunalSearchResult',JSON.stringify(searchResults));
   };
 
-  // useEffect(() => {
-  //   let dues = sessionStorage.getItem("duesSearchComplete");
-  //   let mcd = sessionStorage.getItem("mcdSearchComplete");   
-
-  //   if(mcd){
-  //     setDuesSearchComplete_2(true);
-
-  //   }else{
-  //     setDuesSearchComplete_2(0);
-
-  //   }
-
-
-  //    if (mcd && dues) {
-  //     setDuesSearchComplete_1(true);
-  //   }else{
-  //     setDuesSearchComplete_1(false)
-
-  //   }
-  // }, []);
   const fetchIpAddress = async () => {
     try {
-
       let aufnr_11 = localStorage.getItem('manual');
       if (aufnr_11) {
         aufnr_11 = JSON.parse(aufnr_11);
       }
-
       let obj = {
         aufnr: aufnr_11.AUFNR,
         systemId: sessionStorage.getItem("systemId")
@@ -1529,15 +1295,13 @@ function SealingManual() {
         const duesData = responseData.duesData || [];
         const mcd = responseData.mcdData || [];
         setDuesData_(responseData)
-        if (responseData.tpye && responseData.tpye == 2) {
+        if (responseData.tpye && responseData.tpye === 2) {
           setDuesSearchComplete_2(true);
-
-        } else {
-
-          setDuesSearchComplete_2(0);
-
         }
-        if (duesData.length && responseData.tpye && responseData.tpye == 2) {
+        else {
+          setDuesSearchComplete_2(0);
+        }
+        if (duesData.length && responseData.tpye && responseData.tpye === 2) {
           setDuesSearchComplete_1(true);
         } else {
           setDuesSearchComplete_1(null);
@@ -1550,27 +1314,18 @@ function SealingManual() {
         if (!mcd.length) {
           setDues()
         }
-
         let obj = getCounts(mcd);
         setCounts(obj);
-
-        // let exist = mcd.map(x => x.CONTRACT_ACCOUNT);
-        // setExistingResult(exist);
-
         setselectedRows_1(selectedDues);
       }
-
     } catch (error) {
       setDues()
       console.error('Error fetching IP address:', error);
     }
   };
   useEffect(() => {
-
-
     fetchIpAddress();
   }, []);
-
 
 
   function setDues() {
@@ -1596,7 +1351,6 @@ function SealingManual() {
       }
     }
 
-
     let checked = localStorage.getItem("sealing_set#");
     if (checked) {
       checked = JSON.parse(checked);
@@ -1613,10 +1367,8 @@ function SealingManual() {
     let mcd = sessionStorage.getItem("mcdSearchComplete");
     if (mcd) {
       setDuesSearchComplete_2(true);
-
     } else {
       setDuesSearchComplete_2(0);
-
     }
     if (dues && mcd) {
       setDuesSearchComplete_1(true)
@@ -1624,7 +1376,6 @@ function SealingManual() {
       setDuesSearchComplete_1(null)
     }
   }
-
 
   const handleFilterByBPType = (bpType) => {
     if (!bpType) {
@@ -1636,13 +1387,13 @@ function SealingManual() {
     }
     // Filter the data based on the selected BP_TYPE
     let filteredData = searchResults1;
-    if (bpType == "auto") {
+    if (bpType === "auto") {
 
-      filteredData = searchResults1.filter((item) => item.SEARCH_MODE == 'AUTO-MODE')
+      filteredData = searchResults1.filter((item) => item.SEARCH_MODE === 'AUTO-MODE')
     }
-    if (bpType == "manual") {
+    if (bpType === "manual") {
 
-      filteredData = searchResults1.filter((item) => item.SEARCH_MODE != 'AUTO-MODE')
+      filteredData = searchResults1.filter((item) => item.SEARCH_MODE !== 'AUTO-MODE')
     }
     console.log(filteredData, bpType, "llll", searchResults1)
     setSearchResults(filteredData);
@@ -1653,11 +1404,9 @@ function SealingManual() {
   return (
     <div className="container-fluid">
 
-
       {freeze && (
         <h3 style={{ textAlign: "center", textDecoration: "underline" }} className="mt-2">Final List MCD & Regular</h3>
       )}
-
       {freeze === 0 && (
         <h3 style={{ textAlign: "center", textDecoration: "underline" }} className="mt-2">
           MCD Search Manual-Mode
@@ -1679,8 +1428,6 @@ function SealingManual() {
               <th style={{ width: "15%" }}>NAME</th>
               <th>REQUEST ADDRESS</th>
               <th style={{ width: "10%" }}>REQUEST TYPE</th>
-              {/* <th style={{ width: "10%" }}>ACTION</th> */}
-
             </tr>
             <tr>
               <td>{aufnr_1.AUFNR}</td>
@@ -1689,8 +1436,6 @@ function SealingManual() {
               <td>{aufnr_1.NAME}</td>
               <td>{aufnr_1.SAP_ADDRESS}</td>
               <td>{aufnr_1.ILART}</td>
-
-              {/* <td>{aufnr_1.E_MAIL}</td> */}
             </tr>
           </tbody>
         </table>
@@ -1705,35 +1450,9 @@ function SealingManual() {
                   <span onClick={() => handleFilterByBPType('Sealing')} >Total Result: </span> {searchResults.length}
                 </span>
               )}
-              {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
-                    <span onClick={() => handleFilterByBPType('Sealing')} >Selected Result: </span> {selectedRows_1.length}
-                  </span> */}
-
-
-
-
-
-
               {!freeze &&
-
                 <div className="col-12 text-center heading-link">
-
                   <h5 style={{ color: 'darkslategray', cursor: 'pointer' }}>
-                    {/* <span className="span5"  style={{ color: 'black', fontWeight:"700" }}> */}
-                    {/* <span onClick={() => handleFilterByBPType(null)} >Total:</span> */}
-                    {/* {false ? <span style={{ marginLeft: '8px' }}>0</span> : <span style={{ marginLeft: '8px' }}>{counts.total || 0}</span>}, */}
-
-                    {/* </span> */}
-
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer',color: 'black', fontWeight:"700" }} className="span4">
-                    <span onClick={() => handleFilterByBPType('Normal')}>Normal:</span> {(counts.normal || 0)}
-                  </span>
-                  <span style={{ marginLeft: '16px', cursor: 'pointer',color: 'black', fontWeight:"700" }} className="span3">
-                    <span onClick={() => handleFilterByBPType('ENFORCEMENT')} >Enforcement:</span> {(counts.enforcement || 0)}
-                  </span>
-                  <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span2">
-                    <span onClick={() => handleFilterByBPType('LEGAL')}>Legal:</span> {(counts.legal || 0)}
-                  </span> */}
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('auto')} >Auto Count MCD:</span> {(auto_count || 0)}
                     </span>
@@ -1742,56 +1461,21 @@ function SealingManual() {
                       <span onClick={() => handleFilterByBPType('manual')} >Manual Count MCD:</span> {(manual_count || 0)}
                     </span>
                     <span style={{ marginRight: "60px", color: "green", float: "right" }}>  {!isDuesSearchComplete_1 ? "" : "Sent To DSK"}
-
                       {isDuesSearchComplete_1 && (<i className="fa fa-check" style={{ color: 'green', fontSize: '20px' }} />)}
-
-
-
                     </span>
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
-                    <span onClick={() => handleFilterByBPType('Sealing')} >Prev Searched Count:</span> {(counts.mcd || 0)}
-                  </span> */}
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span1">
-                    <span onClick={() => handleFilterByBPType('other')} >Other:</span> {(counts.other || 0)}
-                  </span> */}
                   </h5>
                 </div>
               }
 
-
               {freeze && (
-
                 <div className="col-12 text-center heading-link">
-
                   <h5 style={{ color: 'darkslategray', cursor: 'pointer' }}>
-                    {/* <span className="span5"  style={{ color: 'black', fontWeight:"700" }}> */}
-                    {/* <span onClick={() => handleFilterByBPType(null)} >Total:</span> */}
-                    {/* {false ? <span style={{ marginLeft: '8px' }}>0</span> : <span style={{ marginLeft: '8px' }}>{counts.total || 0}</span>}, */}
-
-                    {/* </span> */}
-
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer',color: 'black', fontWeight:"700" }} className="span4">
-                   <span onClick={() => handleFilterByBPType('Normal')}>Normal:</span> {(counts.normal || 0)}
-                 </span>
-                 <span style={{ marginLeft: '16px', cursor: 'pointer',color: 'black', fontWeight:"700" }} className="span3">
-                   <span onClick={() => handleFilterByBPType('ENFORCEMENT')} >Enforcement:</span> {(counts.enforcement || 0)}
-                 </span>
-                 <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span2">
-                   <span onClick={() => handleFilterByBPType('LEGAL')}>Legal:</span> {(counts.legal || 0)}
-                 </span> */}
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('Sealing')} >Regular Selected Count:</span> {(prev_C || 0)}
                     </span>
                     <span style={{ marginLeft: '46px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('Sealing')} >MCD Selected Count:</span> {(selectedRows_1.length || 0)}
                     </span>
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700",textDecoration:"underline" }} className="span1">
-                   <span onClick={() => handleFilterByBPType('Sealing')} >Prev Searched Count:</span> {(counts.mcd || 0)}
-                 </span> */}
-                    {/* <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight:"700" }} className="span1">
-                   <span onClick={() => handleFilterByBPType('other')} >Other:</span> {(counts.other || 0)}
-                 </span> */}
-
                   </h5>
                 </div>
               )}
@@ -1821,9 +1505,8 @@ function SealingManual() {
                       </thead>
                       {searchResults.map((result, index) => {
                         const isResultInExisting = existingResult.some(
-                          (existingRow) => existingRow == result.CONS_REF
+                          (existingRow) => existingRow === result.CONS_REF
                         );
-
                         function formatDateToDDMMYYYY(dateString) {
                           const date = new Date(dateString);
                           const day = date.getDate().toString().padStart(2, '0');
@@ -1831,7 +1514,6 @@ function SealingManual() {
                           const year = date.getFullYear();
                           return `${day}-${month}-${year}`;
                         }
-
                         return (
                           <tr key={index} style={{ backgroundColor: isResultInExisting ? '#transparent' : "" }}>
                             <td>
@@ -1846,13 +1528,10 @@ function SealingManual() {
                             <td>{result.SEARCH_MODE || 'MANUAL-MODE'}</td>
                             <td>{result.DUES || '-'}</td>
                             <td style={{ width: '17%' }} >{result.MOVE_OUT ? formatDateToDDMMYYYY(result.MOVE_OUT) : "-"}</td>
-
                             <td>{result.SAP_DEPARTMENT}</td>
                             <td>{result.BP_TYPE}</td>
                             <td>{result.CONTRACT_ACCOUNT}</td>
                             <td>{result.CSTS_CD}</td>
-
-
                             <td style={{ textAlign: "left" }}>{result.SAP_NAME}</td>
                             <td style={{ whiteSpace: 'pre-line', wordWrap: 'break-word', maxWidth: '2000px', textAlign: 'left' }} className="text-left">
                               {result.SAP_ADDRESS}
@@ -1861,10 +1540,8 @@ function SealingManual() {
                           </tr>
                         );
                       })}
-
                     </table>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -1881,27 +1558,10 @@ function SealingManual() {
           </div>
         </div>
       )}
-      {/* {selectedDivision.length && (<span style={{marginLeft:"30px"}}>Selected Division: {selectedDivision.map(x => x.label).join(', ')}</span>
-)} */}
-
       <div style={{ padding: " 1px 16px 16px 16px", position: "sticky", top: "0px" }}>
         {showProgressBar && <ProgressBar value={progressValue} max={100} />}
-
-
-
         {!isDuesSearchComplete_1 && (<div className="container-fluid mb-2">
           <div className="row justify-content-center">
-
-
-            {/* <div className="col-2">
-              <h4 className="mt-2" style={{ color:"#007bff"}}>Manual Search</h4>
-            </div> */}
-            {/* <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
-            <div>
-    
-    </div>
-            </div> */}
-
             <div className="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-1">
               {divisions.length > 0 && (
                 <Select
@@ -1932,7 +1592,6 @@ function SealingManual() {
               />
             </div>
 
-
             <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
               <input type="textarea"
                 name="textValue"
@@ -1954,14 +1613,6 @@ function SealingManual() {
               />
             </div>
             <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
-              {/* <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAutoBreakClick}
-              style={{ marginRight: "5px" }}
-            >
-              AutoBreak
-            </Button> */}
               <Button
                 variant="contained"
                 color="primary"
@@ -1973,47 +1624,11 @@ function SealingManual() {
           </div>
           <hr style={{ width: "85%", margin: "10px auto", borderColor: "black", borderBottom: "1px solid black" }} />
         </div>
-
         )}
-
-
-
 
         {/* Inputs and buttons */}
         <Grid container spacing={2} style={{ textAlign: "center" }}>
-          {/* 
-          <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="House/Plot/Block/Khasra"
-              variant="outlined"
-              value={addressPart1}
-              onChange={(e) => setAddressPart1(e.target.value)}
-            />
-          </Grid> */}
-
-          {/* <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="Number(House/Plot/Block/Khasra)"
-              variant="outlined"
-              value={addressPart2}
-              onChange={(e) => setAddressPart2(e.target.value)}
-            />
-          </Grid> */}
-
-          {/* <Grid item xs={4}>
-            <TextField
-              fullWidth
-              label="Area"
-              variant="outlined"
-              value={addressPart3}
-              onChange={(e) => setAddressPart3(e.target.value)}
-            />
-          </Grid> */}
-
           <Grid item xs={12} >
-
             {!freeze && <Button
               variant="contained"
               disabled={isDuesSearchComplete_2}
@@ -2023,9 +1638,7 @@ function SealingManual() {
             >
               Complete MCD Search
             </Button>
-
             }
-
             {!isDuesSearchComplete_1 && (<Button
               variant="contained"
               color="warning"
@@ -2034,7 +1647,6 @@ function SealingManual() {
             >
               Reset
             </Button>
-
             )}
             {(searchResults.length > 0 && freeze) && (<Button
               variant="contained"
@@ -2047,46 +1659,27 @@ function SealingManual() {
             </Button>
             )}
 
-            {/* {searchResults.length > 0 && (<Button
-              variant="contained"
-              color="warning"
-              onClick={(e) => openModal(e.target.value)}
-              style={{ marginLeft: "10px" }}
-            >
-              Refine Seach
-            </Button>
-
-            )} */}
-
-
-
             {!freeze && <div class='modal modal-container' id="searchModal" tabindex="-1" role="dialog" style={{ top: "270px", left: "968px", width: "440px", position: "absolute" }}>
               <div class="modal-dialog modal-container" role="document">
                 <div className="modal-content modal-container">
                   <div id="head" style={{ textAlign: "center", padding: "6px", display: "block", background: "linear-gradient(to bottom,#69c 40%,#316598) !important" }} className="modal-header">
                     <h5 style={{ textAlign: "center" }} className="modal-title">Refine Search</h5>
-
                   </div>
                   <div className="modal-body" style={{ padding: "9px" }}>
                     {/* Search Input */}
                     <div className="form-group">
-
                       <div class="d-flex justify-content-center " >
-
                         <div>
                           <label>Search Query</label>
-
                           <input
                             type="text"
                             className="form-control mr-5"
                             style={{ width: "95%" }}
                             value={searchQuery}
                             onKeyPress={(e) => handleKeyPress(e)}
-
                             onChange={handleSearchInputChange}
                           />
                         </div>
-                        {/* {searchError && <span style={{color:"red"}} className="invalid-feedback1">{searchError}</span>} */}
                         <div className="mt-4">
                           <button
                             type="button"
@@ -2105,29 +1698,13 @@ function SealingManual() {
                             Close
                           </button>
                         </div>
-
-
                       </div>
-
-
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
-
             }
-
-
-
-
-
-
-
-
-
-
             {true > 0 && (<Button
               variant="contained"
               color="info"
@@ -2138,15 +1715,11 @@ function SealingManual() {
             </Button>
             )}
 
-
             <div className="form-group searchBorder" style={{ display: "inline-block" }}>
               {!isDuesSearchComplete_1 && (<div className="form-group searchBorder" style={{ display: "inline-block" }}>
-
                 <div class="d-flex justify-content-center mr-3" style={{ marginLeft: "5px" }}>
-
                   <div>
                     {/* <label>Search Query</label> */}
-
                     <input
                       type="text"
                       className="form-control mr-5"
@@ -2154,13 +1727,11 @@ function SealingManual() {
                       placeholder="Refine Search"
                       value={searchQuery}
                       onKeyPress={(e) => handleKeyPress(e)}
-
                       onChange={handleSearchInputChange}
                     />
                   </div>
 
                   <div className="ml-3" style={{ marginLeft: "0px" }}>
-
                     <Button
                       variant="contained"
                       color="warning"
@@ -2178,37 +1749,17 @@ function SealingManual() {
                     >
                       Original List
                     </Button>
-
                     )}
-
-                    {/* <button
-      type="button"
-      className="btn btn-primary"
-      onClick={handleSearchClick}
-    >
-      Search
-    </button> */}
                   </div>
 
                 </div>
               </div>)}
-
             </div>
-
-
-
-
-
-
           </Grid>
         </Grid>
       </div>
-
-
       <div style={{ marginTop: "-32px" }}>
-
       </div>
-
     </div>
   );
 }

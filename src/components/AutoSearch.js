@@ -154,59 +154,12 @@ function AutoSearch(navigation) {
         console.error("Error fetching divisions:", error);
       });
   };
-  // const fetchDivisions = () => {
-  //   let usertype= localStorage.getItem("user") || "undefined"
-  //   fetch(`https://127.0.0.1:5001/api/divisions_on_page_load1`)
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       let arr =[]
-  //       if(data.data){
-  //         data.data.forEach(x=>{
-  //           arr.push({value:x.VAPLZ,
-  //             label:x.VAPLZ +'-' +x.DIVISION_NAME})
-  //         })
-  //       }
 
-  //       console.log(arr,"arrarrarrarr")
-  //       setDivisions(arr);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching divisions:", error);
-  //     });
-  // };
   useEffect(() => {
     fetchDivisions();
   }, []);
 
-
-
-
-
   const pageIdentifier = "autoSearchPage";
-
-  // Load selected rows from localStorage on component mount
-  // useEffect(() => {
-  //   const storedSelectedRows = JSON.parse(localStorage.getItem(`_selectedRows`)) || [];
-  //   const page = JSON.parse(localStorage.getItem(`_currentPage`)) || [];
-
-  //   console.log(storedSelectedRows,"storedSelectedRowsstoredSelectedRows")
-  //   setSelectedRows(storedSelectedRows);
-  //   setCurrentPage(page || 0)
-  //   setSelectedRowCount(storedSelectedRows.length);
-  //   // setsele
-  //   // setSelectAllChecked(false); // Clear select all checkbox
-  // }, []);
-
-  // // Save selected rows to localStorage whenever it changes
-  // useEffect(() => {
-  //   if(selectedRows.length) {
-  //     localStorage.setItem(`_selectedRows`, JSON.stringify(selectedRows));
-  //     localStorage.setItem(`_currentPage`, currentPage);
-  //   }
-
-  // Other state variables can be saved to localStorage as needed
-  // }, [selectedRows]);
-
 
 
   const handleFetchCases = () => {
@@ -255,7 +208,7 @@ function AutoSearch(navigation) {
         // Update the case count
         setCaseCount(rowsWithId.length);
         console.log("Fetched cases data:", rowsWithId);
-        let filter = divisions.filter(x => x.VAPLZ == value);
+        let filter = divisions.filter(x => x.VAPLZ === value);
 
         localStorage.setItem("selectedDivision", JSON.stringify(filter))
         const requestPromise = fetch(`${url.API_url}/api/synonyms`, {
