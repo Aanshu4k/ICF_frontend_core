@@ -335,7 +335,7 @@ function AutoSearch(navigation) {
 
         let searchWords = filteredSapAddress.split(' ');
 
-        searchWords = searchWords.filter(x => x != "")
+        searchWords = searchWords.filter(x => x !== "")
         console.log(searchWords, "filteredSapAddressfilteredSapAddress");
 
         let longestWord = searchWords.reduce((prev, current) => (current.length > prev.length ? current : prev), '');
@@ -646,16 +646,12 @@ function AutoSearch(navigation) {
         }
         return exclude_terms.some(arrWord => word.includes(arrWord.toUpperCase()))
       }
-
       let new_arr = finalStr.filter(x => !containsWord(x))
       finalStr = new_arr;
       const uniqueArray = [...new Set(finalStr)];
       finalStr = uniqueArray;
       let secondFinalStr = await searchMatchingResultAlgoAgainForWords(row.SAP_ADDRESS, []);
-      console.log(finalStr, "kaml sharma", secondFinalStr);
-
-      // secondFinalStr = secondFinalStr.filter(x => !containsWord1(x));
-      console.log(finalStr, "kaml sharma `1", secondFinalStr);
+      console.log(finalStr, "Second Final Str => ", secondFinalStr);
 
       let uniqueArray1 = [...new Set(secondFinalStr)];
       uniqueArray1 = uniqueArray1.map(x => x.toUpperCase());
@@ -695,6 +691,7 @@ function AutoSearch(navigation) {
 
       let sealing_str = []
       uniqueArray1.forEach(x => {
+        console.log("Unique Array 1 : ",x)
         const prefix = x.match(/^([a-zA-Z]+)(.*)/);
         if (prefix && prefix.length) {
           let arr = getWordArr(prefix[1], prefix[2]);
@@ -800,6 +797,7 @@ function AutoSearch(navigation) {
         sealing_str,
         secondFinalStr: r1
       };
+      console.log("PAYLOAD FOR SEARCH API : ",payload)
       let splitedNumeric = []
       r.map(x => {
         if (x) {
@@ -853,6 +851,7 @@ function AutoSearch(navigation) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         let data = await response.json();
+        console.log("SEARCH API RESPONSE : ",data)
         row.final = data.results_count;
         if (data.count <= 2000) {
           saveExistRes[`${row.AUFNR}`] = data.results_count;

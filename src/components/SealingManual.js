@@ -1388,11 +1388,9 @@ function SealingManual() {
     // Filter the data based on the selected BP_TYPE
     let filteredData = searchResults1;
     if (bpType === "auto") {
-
       filteredData = searchResults1.filter((item) => item.SEARCH_MODE === 'AUTO-MODE')
     }
     if (bpType === "manual") {
-
       filteredData = searchResults1.filter((item) => item.SEARCH_MODE !== 'AUTO-MODE')
     }
     console.log(filteredData, bpType, "llll", searchResults1)
@@ -1403,7 +1401,6 @@ function SealingManual() {
 
   return (
     <div className="container-fluid">
-
       {freeze && (
         <h3 style={{ textAlign: "center", textDecoration: "underline" }} className="mt-2">Final List MCD & Regular</h3>
       )}
@@ -1456,7 +1453,6 @@ function SealingManual() {
                     <span style={{ marginLeft: '16px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('auto')} >Auto Count MCD:</span> {(auto_count || 0)}
                     </span>
-
                     <span style={{ marginLeft: '46px', cursor: 'pointer', color: 'black', fontWeight: "700", textDecoration: "underline" }} className="span1">
                       <span onClick={() => handleFilterByBPType('manual')} >Manual Count MCD:</span> {(manual_count || 0)}
                     </span>

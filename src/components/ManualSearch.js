@@ -187,20 +187,15 @@ function ManualSearch() {
         }
         const selectedDues = responseData.selectedDues || [];
         // Transformations or other logic can be applied here
-
         setSearchResults(selectedDues);
         setSearchResults1(selectedDues);
         setSearchResultsOther(selectedDues);
 
         let obj = getCounts(selectedDues);
         setCounts(obj);
-
         let exist = selectedDues.map(x => x.CONTRACT_ACCOUNT);
         setExistingResult(exist);
-
         setselectedRows_1(selectedDues);
-
-
         if (!duesData.length) {
           setDues()
         }
@@ -240,11 +235,9 @@ function ManualSearch() {
   let aufnr_11 = localStorage.getItem('manual');
   if (aufnr_11) {
     aufnr_11 = JSON.parse(aufnr_11);
-    // console.log(aufnr_11,"aufnr_11");
     if (aufnr_1.AUFNR !== aufnr_11.AUFNR) {
       setAufnr_1(aufnr_11);
       setCaseData(aufnr_11);
-
     }
   }
   console.log("Case Data (aufnr_11) : ", aufnr_11);
@@ -252,6 +245,7 @@ function ManualSearch() {
   const [showProgressBar, setShowProgressBar] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
 
+  //insert logs in the mongo db collection logentries
   function setSearchLogs(payload) {
     const requestPromise = fetch(`${url.api_url}/api/create_log`, {
       method: "POST",
@@ -353,10 +347,7 @@ function ManualSearch() {
   const handleCalculateDues = async (index, user) => {
     let count = await getCounts(selectedRows_1);
     console.log(counts);
-
-
-
-
+    
     if (selectedRows_1) {
       Swal.fire({
         title: 'Are you sure?',
@@ -986,16 +977,11 @@ function ManualSearch() {
         setSearchResults([]);
         setSearchResults1([]);
         setSearchResultsOther([])
-        // if(drop && drop==1){
         console.log(searchResults.length, "lll", data.data)
         data.data = data.data.filter(x => !existingResult.includes(x.CONTRACT_ACCOUNT))
-        // }
-        // console.log(data.data.length, "wwwwwwwwww", existingResult.length)
-        // let res = await searchMatchingResultAlgo("",resultsData,str);
-        finalres.map(x => {
-          x.SEARCH_MODE = "AUTO-MODE"
+        finalres.forEach(x => {
+          x.SEARCH_MODE = "AUTO-MODE";
         })
-        // data.data.map()
         console.log(finalres, "finalres")
         data.data.push(...finalres);
         let dues_filter = data.data.filter(x => x.solr_dues > 500)
@@ -1041,7 +1027,6 @@ function ManualSearch() {
         console.error("Error fetching search results:", error);
         setShowLoading(false);
         handleButtonClick(0)
-
         // Handle error condition if needed
       });
   };
