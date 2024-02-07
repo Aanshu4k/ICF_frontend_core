@@ -76,15 +76,14 @@ function ManualSearch() {
     })
   }
 
+  //function to check dues and mcd search complete status from local storage
   function checkBt() {
     let dues = sessionStorage.getItem("duesSearchComplete");
     let mcd = sessionStorage.getItem("mcdSearchComplete");
     if (dues) {
       setDuesSearchComplete_2(true);
-
     } else {
       setDuesSearchComplete_2(0);
-
     }
     if (dues && mcd) {
       setDuesSearchComplete_1(true)
@@ -92,7 +91,6 @@ function ManualSearch() {
       setDuesSearchComplete_1(null)
     }
   }
-
 
   function setDues() {
     let existingResult = localStorage.getItem("saveExistRes");
@@ -124,6 +122,7 @@ function ManualSearch() {
     if (check) {
       check = JSON.parse(check);
       setselectedRows_1(check)
+      console.log("selected rows_1 : ", selectedRows_1)
     }
     if (!aufnr) {
       console.error("AUFNR parameter is missing.");
@@ -140,7 +139,7 @@ function ManualSearch() {
     const endIndex = startIndex + itemsPerPage;
     console.log(searchResultsOther, "qqqqqqqqqqq")
 
-    let items = page == 0 ? data.slice(startIndex, endIndex) : searchResultsOther.slice(startIndex, endIndex);
+    let items = page === 0 ? data.slice(startIndex, endIndex) : searchResultsOther.slice(startIndex, endIndex);
     console.log(items.length, "searchResultsOther")
 
     setSearchResults(items)
@@ -172,13 +171,10 @@ function ManualSearch() {
         setDuesData_(responseData);
         const duesData = responseData.duesData || [];
         const mcd = responseData.mcdData || [];
-
         if (duesData.length) {
           setDuesSearchComplete_2(true);
-
         } else {
           setDuesSearchComplete_2(0);
-
         }
         if (duesData.length && responseData.tpye && responseData.tpye == 2) {
           setDuesSearchComplete_1(true);
@@ -210,7 +206,7 @@ function ManualSearch() {
     fetchIpAddress();
   }, []);
 
-  // Function to handle forward and next pagination controls
+  // Function to count the filter out the BP type data from the search results
   const getCounts = (data) => {
     if (!data) return {
       normal: [].length,
@@ -222,12 +218,12 @@ function ManualSearch() {
     }
     let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
     return {
-      normal: data.filter(x => x.BP_TYPE == 'Normal').length,
+      normal: data.filter(x => x.BP_TYPE === 'Normal').length,
       total: data.length,
-      enforcement: data.filter(x => x.BP_TYPE == 'ENFORCEMENT').length,
-      legal: data.filter(x => x.BP_TYPE == 'LEGAL').length,
-      mcd: data.filter(x => x.BP_TYPE == 'Sealing').length,
-      move: data.filter(x => x.BP_TYPE == 'Normal' && !x.MOVE_OUT.includes('9999')).length,
+      enforcement: data.filter(x => x.BP_TYPE === 'ENFORCEMENT').length,
+      legal: data.filter(x => x.BP_TYPE === 'LEGAL').length,
+      mcd: data.filter(x => x.BP_TYPE === 'Sealing').length,
+      move: data.filter(x => x.BP_TYPE === 'Normal' && !x.MOVE_OUT.includes('9999')).length,
       other: data.filter(x => !bps.includes(x.BP_TYPE)).length
     }
   };
@@ -323,10 +319,8 @@ function ManualSearch() {
   function mergeWordsAndRemoveSpaces(inputString) {
     // Split the input string by spaces
     const words = inputString.split(' ');
-
     // Remove spaces and merge all words together
     const mergedString = words.join('');
-
     return mergedString;
   }
 
@@ -344,10 +338,10 @@ function ManualSearch() {
     return /\d/.test(str);
   }
 
-  const handleCalculateDues = async (index, user) => {
+  const handleCalculateDues = async () => {
     let count = await getCounts(selectedRows_1);
     console.log(counts);
-    
+
     if (selectedRows_1) {
       Swal.fire({
         title: 'Are you sure?',
@@ -373,7 +367,6 @@ function ManualSearch() {
         <p><span id="moveOutLabel" class="move-out-label">Move out selected</span> - <span id="moveOutCount" class="move-out">${count.move}</span></p>
         <p><span id="legalLabel" class="legal-label">Legal selected</span> - <span id="legalCount" class="legal">${count.legal}</span></p>
       </div>`
-
       }).then(async (result) => {
         if (result.isConfirmed) {
           let systemId = sessionStorage.getItem("systemId");
@@ -394,7 +387,7 @@ function ManualSearch() {
           });
           console.log(duesData_);
 
-          if (duesData_ && duesData_.tpye == 2) {
+          if (duesData_ && duesData_.tpye === 2) {
             let caNumbers = selectedRows_1.map(x => x.CONTRACT_ACCOUNT)
             let response = await fetch(`${url.API_url}/api/calculate_dues`, {
               method: "POST",
@@ -404,10 +397,9 @@ function ManualSearch() {
               body: JSON.stringify({ caNumbers }),
             })
             let dues = await response.json();
-            console.log(dues, "duesduesduesdues")
-            // alert("S")
+            console.log(dues, "dues")
             selectedRows_1.forEach(x => {
-              let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+              let duess = dues.duesData.filter(y => y.CA_NUMBER === x.CONTRACT_ACCOUNT);
               if (duess && duess.length) {
                 x.DUES = duess[0].AMOUNT
               }
@@ -422,7 +414,8 @@ function ManualSearch() {
               body: JSON.stringify({ data: arr, addr: aufnr_1 }),
             })
             exportToExcel(arr, aufnr_1);
-          } else {
+          }
+          else {
             let caNumbers = selectedRows_1.map(x => x.CONTRACT_ACCOUNT)
             let response = await fetch(`${url.API_url}/api/calculate_dues`, {
               method: "POST",
@@ -432,29 +425,21 @@ function ManualSearch() {
               body: JSON.stringify({ caNumbers }),
             })
             let dues = await response.json();
-            console.log(dues, "duesduesduesdues")
-            // alert("S")
+            console.log("Dues search for the calculate_dues method : ", dues)
             selectedRows_1.forEach(x => {
-              let duess = dues.duesData.filter(y => y.CA_NUMBER == x.CONTRACT_ACCOUNT);
+              let duess = dues.duesData.filter(y => y.CA_NUMBER === x.CONTRACT_ACCOUNT);
               if (duess && duess.length) {
                 x.DUES = duess[0].AMOUNT
               }
             });
-
           }
-          console.log(selectedRows_1, "selectedRows_1selectedRows_1")
+          console.log("Selected Rows 1 : ", selectedRows_1)
           setselectedRows_1(selectedRows_1);
           setSearchResults(selectedRows_1);
 
-
-
-          sessionStorage.setItem("duesSearchComplete", "true");
-
+          sessionStorage.setItem("duesSearchComplete", "true");   //flag set true when dues search complete
           checkBt();
-          // User confirmed, proceed with saving data
-          // localStorage.setItem("sealingData", JSON.stringify(selectedRows_1));
           localStorage.setItem("selectedMatchedRows1", JSON.stringify([aufnr_1]));
-
           // Show success message
           Swal.fire({
             title: 'Success!',
@@ -496,7 +481,6 @@ function ManualSearch() {
       return
     }
 
-    // data = data.filter(x=>x.DUES);
     for (let index = 0; index < data.length; index++) {
       let element = data[index];
       element['CF_CATEGORY'] = element['BP_TYPE'];
@@ -516,7 +500,6 @@ function ManualSearch() {
       });
       return filteredItem;
     });
-
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -613,23 +596,25 @@ function ManualSearch() {
     })
 
   };
-  const refineSearch = async (address, data, str) => {
+
+  //clean the search query and extracts its matching address using searchMatchingResultAlgoAgain function
+  const refineSearch = async (address, data, str) => {      //auto searched data and search input by the user
     return new Promise(async (res, rej) => {
       try {
         if (str) {
           str = removeSpecialCharsAndCapitalize(str);
         }
-        console.log(cleanAndUppercaseString(str), "cleanAndUppercaseString(str)", data);
+        console.log(cleanAndUppercaseString(str), "cleanAndUppercaseString(str)", data);    //clean unwanted characters from the user input
         const currentWordFilteredResults = [];
         // Define a function to check if an array of strings matches the criteria
         function matchesCriteria(arr, str) {
           if (!Array.isArray(arr)) {
             return false;
           }
-          let numericPart1 = str.match(/\d+(\.\d+)?/g);
-          let alphabetPart1 = str.match(/[A-Za-z]+/);
+          let numericPart1 = str.match(/\d+(\.\d+)?/g); //matches the search query for a word starts with dot for float numbers (extracts the numeric part)
+          let alphabetPart1 = str.match(/[A-Za-z]+/);   //matches the search query for a word starts with character in uppercase and lowercase 
 
-          console.log(alphabetPart1, numericPart1, arr, "last");
+          console.log(alphabetPart1, numericPart1, arr, "clean search query 2");
           arr = arr.filter(x => x != '')
           let is_exist = false;
           for (let index = 0; index < arr.length; index++) {
@@ -686,24 +671,12 @@ function ManualSearch() {
 
           if (matchesCriteria(finalStr, str.toUpperCase())) {
             currentWordFilteredResults.push(doc);
-
           }
         }
-
-
         console.log(currentWordFilteredResults, "kaml sharma")
-
-        // const uniqueArray = currentWordFilteredResults.filter((item, index, self) => {
-        //   return (
-        //     index ===
-        //     self.findIndex((t) => t.CONS_REF == item.CONS_REF)
-        //   );
-        // });
-        // let otherBptype = searchResultsOther.filter(x=>x.BP_TYPE!='Normal');
-        // currentWordFilteredResults.push(...otherBptype)
         res(currentWordFilteredResults);
-
-      } catch (error) {
+      }
+      catch (error) {
         console.log(error);
         res([]);
         // Handle errors
@@ -744,7 +717,7 @@ function ManualSearch() {
       duesData: [],
       selectedDues: []
     }
-    console.log(obj);
+    console.log("Payload for icf_data_status API : ", obj);
     await fetch(`https://icf1.bsesbrpl.co.in/api/icf_data_status`, {
       method: "POST",
       headers: {
@@ -780,7 +753,7 @@ function ManualSearch() {
     const query = e.target.value;
     await setSearchQuery(query);
     console.log(searchQuery, "searchQuery");
-    if (searchQuery.trim() == "") {
+    if (searchQuery.trim() === "") {
       console.log("adsx")
       setSearchError("Search query cannot be empty");
     } else {
@@ -792,10 +765,8 @@ function ManualSearch() {
     setSearchResults(searchResultsOther);
     setSearchResults1(searchResultsOther);
     handlePageClick({ selected: 0, searchResultsOther });
-
     let obj = getCounts(searchResultsOther);
     setCounts(obj)
-
   }
   const goBack = () => {
     navigate('/auto')
@@ -815,8 +786,9 @@ function ManualSearch() {
     if (!is_first) {
       set_is_first(true);
     }
-    console.log("adsx", searchResults.length);
+    console.log("search result length", searchResults.length);
     let result = await refineSearch("", searchResults, searchQuery);
+    console.log("RESULT AFTER REFINE SEARCH : ", result)
     setSearchQuery("");
     let obj = getCounts(result);
     setCounts(obj)
@@ -825,23 +797,13 @@ function ManualSearch() {
     setSearchResults(result);
     setSearchResults1(result);
     handlePageClick({ selected: 0 }, result)
-
     if (searchQuery.trim() === "") {
       console.log("adsx")
-
       setSearchError("Search query cannot be empty");
-
     } else {
-      // Clear any previous error message
       setSearchError("");
-
-      // Perform the search
-      // ...
-      // closeModal();
-
     }
     console.log(searchError)
-
   };
 
   const handleCalculateDues1 = (index, user) => {
@@ -1170,18 +1132,17 @@ function ManualSearch() {
     }
     // Filter the data based on the selected BP_TYPE
     let filteredData = [];
-    if (bpType == "other") {
+    if (bpType === "other") {
       let bps = ["Normal", "ENFORCEMENT", "LEGAL", "Sealing"];
       filteredData = searchResults1.filter((item) => !bps.includes(item.BP_TYPE))
     } else {
       filteredData = searchResults1.filter((item) => item.BP_TYPE == bpType)
     }
 
-    if (bpType == "move") {
+    if (bpType === "move") {
       console.log(searchResults1)
-      filteredData = searchResults1.filter((item) => item.BP_TYPE == 'Normal' && !item.MOVE_OUT.includes('9999'))
+      filteredData = searchResults1.filter((item) => item.BP_TYPE === 'Normal' && !item.MOVE_OUT.includes('9999'))
     }
-
     console.log(filteredData, bpType, "llll", searchResults1)
     setSearchResults(filteredData);
     let obj = getCounts(searchResultsOther);
@@ -1344,12 +1305,11 @@ function ManualSearch() {
                               <td>{result.BP_TYPE}</td>
                               <td>{result.CONTRACT_ACCOUNT}</td>
                               <td>{result.CSTS_CD}</td>
-
-
                               <td style={{ textAlign: "left" }}>{result.SAP_NAME}</td>
                               <td style={{ whiteSpace: 'pre-line', wordWrap: 'break-word', maxWidth: '2000px', textAlign: 'left' }} className="text-left">
                                 {result.SAP_ADDRESS}
-                              </td>                            <td>{result.SAP_POLE_ID}</td>
+                              </td>
+                              <td>{result.SAP_POLE_ID}</td>
                               <td>{result.TARIFF}</td>
                             </tr>
                           );
@@ -1377,9 +1337,6 @@ function ManualSearch() {
 
           {!isDuesSearchComplete_1 && (<div className="container-fluid mb-2">
             <div className="row justify-content-center">
-              {/* <div className="col-2">
-              <h4 className="mt-2" style={{ color:"#007bff"}}>Manual Search</h4>
-            </div> */}
               <div className="col-1"></div>
               <div className="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-1">
                 <input type="textarea"
@@ -1413,16 +1370,7 @@ function ManualSearch() {
                   style={{ border: "1px solid #9a9da1" }}
                 />
               </div>
-
               <div className="col-xl-4 col-lg-5 col-md-6 col-sm-12 mb-1">
-                {/* <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAutoBreakClick}
-              style={{ marginRight: "5px" }}
-            >
-              AutoBreak
-            </Button> */}
                 <Button
                   variant="contained"
                   color="primary"
@@ -1513,6 +1461,8 @@ function ManualSearch() {
                 Back to Home
               </Button>
               )}
+
+              {/* refine search section */}
               {!isDuesSearchComplete_1 && (<div className="form-group searchBorder" style={{ display: "inline-block" }}>
                 <div class="d-flex justify-content-center mr-3" style={{ marginLeft: "5px" }}>
                   <div>

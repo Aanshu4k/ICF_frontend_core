@@ -691,7 +691,7 @@ function AutoSearch(navigation) {
 
       let sealing_str = []
       uniqueArray1.forEach(x => {
-        console.log("Unique Array 1 : ",x)
+        console.log("Unique Array 1 : ", x)
         const prefix = x.match(/^([a-zA-Z]+)(.*)/);
         if (prefix && prefix.length) {
           let arr = getWordArr(prefix[1], prefix[2]);
@@ -797,7 +797,7 @@ function AutoSearch(navigation) {
         sealing_str,
         secondFinalStr: r1
       };
-      console.log("PAYLOAD FOR SEARCH API : ",payload)
+      console.log("PAYLOAD FOR SEARCH API : ", payload)
       let splitedNumeric = []
       r.map(x => {
         if (x) {
@@ -851,7 +851,7 @@ function AutoSearch(navigation) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         let data = await response.json();
-        console.log("SEARCH API RESPONSE : ",data)
+        console.log("SEARCH API RESPONSE : ", data)
         row.final = data.results_count;
         if (data.count <= 2000) {
           saveExistRes[`${row.AUFNR}`] = data.results_count;
@@ -892,7 +892,7 @@ function AutoSearch(navigation) {
     // Use Promise.all to wait for all promises to resolve
     await Promise.all(requestPromises);
     localStorage.removeItem('existingResult');
-
+    console.log("saveExistRes : ", saveExistRes);
     localStorage.setItem('saveExistRes', JSON.stringify(saveExistRes));
     navigate('/output');
     handleButtonClick(0);
@@ -913,9 +913,7 @@ function AutoSearch(navigation) {
       navigate('/output')
       handleButtonClick(0);
       return
-
     }
-
   };
 
   const [selectAllChecked, setSelectAllChecked] = useState(false);
@@ -962,12 +960,7 @@ function AutoSearch(navigation) {
       setSelectedRowCount(casesData.length)
       setSelectAllChecked(true);
       res(casesData);
-
     })
-
-
-
-
   }
 
   function removeSpecialCharsAndCapitalize(inputString) {

@@ -413,7 +413,7 @@ function SealingManual() {
   }, []);
   const handleCalculateDues = (index, user) => {
     //alert("d")
-    let auto = selectedRows_1.filter(x => x.SEARCH_MODE == "AUTO-MODE").length;
+    let auto = selectedRows_1.filter(x => x.SEARCH_MODE === "AUTO-MODE").length;
 
     let manual = selectedRows_1.filter(x => !x.SEARCH_MODE).length;
 
@@ -1004,7 +1004,7 @@ function SealingManual() {
   // Function to handle manual search button click
   const handleManualSearchClick = () => {
     if (!addressPart1 && !addressPart2 && !addressPart3) {
-      return
+      return;
     }
     const startTime = new Date();
     if (addressPart1)
@@ -1153,7 +1153,7 @@ function SealingManual() {
     } else {
       console.log("2");
       // Remove the unselected row from the state
-      setselectedRows_1((prevSelectedRows) => prevSelectedRows.filter((selectedRow) => selectedRow.id != row.id));
+      setselectedRows_1((prevSelectedRows) => prevSelectedRows.filter((selectedRow) => selectedRow.id !== row.id));
     }
     console.log(selectedRows_1, ";;l;l;l;")
   };

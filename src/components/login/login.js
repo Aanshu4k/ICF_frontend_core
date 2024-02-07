@@ -25,7 +25,6 @@ class LoginForm extends Component {
     if (this.state.email && this.state.password) {
       if (this.state.email === "testcf" && this.state.password === "12345678") {
         localStorage.setItem('userIsLoggedIn', true);
-        // localStorage.setItem('user',da);
         window.location.href = "/icf";
         return
       }
@@ -37,7 +36,7 @@ class LoginForm extends Component {
         .then((data) => {
           if (data.data) {
             localStorage.setItem('userIsLoggedIn', true);
-            localStorage.setItem('#name', data.data.name);
+            localStorage.setItem('#name', data.USERNAME);
             localStorage.setItem('user', data.encryptedText);
             window.location.href = "/icf";
           } else {
@@ -55,7 +54,6 @@ class LoginForm extends Component {
     return (
       <div className=''>
         <section>
-
           <div className="main-form-container">
             <div className="form-container">
               <div style={{ width: "20px", height: "40px" }}>
